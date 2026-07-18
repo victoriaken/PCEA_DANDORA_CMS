@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCEA Dandora - Church Administration Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .app { display: flex; height: 860px; font-size: 13px; background: #f5f2eb; }
+    .sb { width: 210px; min-width: 210px; background: #020652; display: flex; flex-direction: column; }
+    .sb-brand { padding: 16px 14px 12px; border-bottom: 1px solid #1050d0; }
+    .sb-brand .lr { display: flex; align-items: center; gap: 9px; }
+    .sb-brand .ic { width: 34px; height: 34px; background: #c9981f; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1a2e1e; font-size: 16px; }
+    .sb-brand .nm { color: #fff; font-size: 15px; font-weight: 500; }
+    .sb-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+    .ni { display: flex; align-items: center; gap: 9px; padding: 10px 14px; cursor: pointer; color: #96bfa0; font-size: 12.5px; transition: background .12s; }
+    .ni:hover { background:  #1050d0; color: #fff; }
+    .ni.active { background:  #14409a; color: #c9981f; font-weight: 500; }
+    .ni i { font-size: 16px; flex-shrink: 0; }
+    .sb-foot { padding: 12px 14px; border-top: 1px solid #2d4433; }
+    .sb-foot .ur { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .sb-foot .uav-t { width: 30px; height: 30px; border-radius: 50%; background: #faeeda; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: #633806; }
+    .sb-foot .un { color: #fff; font-size: 12px; font-weight: 500; }
+    .sb-foot .uro { color: #c9981f; font-size: 10px; letter-spacing: .5px; }
+    .sb-foot .lo { display: flex; align-items: center; gap: 7px; color: #96bfa0; font-size: 12px; cursor: pointer; }
+    .sb-foot .lo:hover { color: #fff; }
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .topbar { height: 48px; background: #fff; border-bottom: 0.5px solid #ddd8cc; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+    .tb-l { display: flex; align-items: center; gap: 12px; }
+    .pl { font-size: 14px; font-weight: 500; color: #1a2e1e; }
+    .tb-r { display: flex; align-items: center; gap: 10px; }
+    .nb { width: 30px; height: 30px; border-radius: 50%; background: #f5f2eb; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #555; font-size: 16px; position: relative; }
+    .nd { width: 7px; height: 7px; background: #e24b4a; border-radius: 50%; position: absolute; top: 4px; right: 4px; }
+    .uav-t { width: 30px; height: 30px; border-radius: 50%; background: #faeeda; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: #633806; }
+    .body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .ph { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+    .ph h2 { font-size: 20px; font-weight: 500; color: #1a2e1e; }
+    .ph .sub { font-size: 12px; color: #7a7567; margin-top: 3px; }
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 8px; font-size: 12px; cursor: pointer; border: 0.5px solid #2d4433; background: #1a2e1e; color: #fff; text-decoration: none; font-family: inherit; }
+    .btn:hover { background: #253d28; }
+    .btn.out { background: #fff; color: #1a2e1e; border-color: #ccc9bc; }
+    .btn.out:hover { background: #f5f2eb; }
+    .btn.sm { padding: 5px 10px; font-size: 11px; }
+    .krow { display: grid; gap: 10px; margin-bottom: 14px; }
+    .krow.g4 { grid-template-columns: repeat(4, 1fr); }
+    .kc { background: #fff; border: 0.5px solid #ddd8cc; border-radius: 10px; padding: 12px 14px; }
+    .kc .kl { font-size: 11px; color: #7a7567; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+    .kc .kv { font-size: 20px; font-weight: 500; color: #1a2e1e; line-height: 1.1; }
+    .kc .kd { font-size: 11px; margin-top: 4px; }
+    .up { color: #27500a; } .dn { color: #a32d2d; } .nt { color: #7a7567; }
+    .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 12px; margin-bottom: 12px; }
+    .card { background: #fff; border: 0.5px solid #ddd8cc; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+    .card:last-child { margin-bottom: 0; }
+    .ct { font-size: 12.5px; font-weight: 500; color: #1a2e1e; margin-bottom: 11px; display: flex; align-items: center; justify-content: space-between; }
+    .ct-l { display: flex; align-items: center; gap: 6px; }
+    .bdg { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 20px; font-size: 10.5px; }
+    .bg { background: #eaf3de; color: #27500a; } .ba { background: #faeeda; color: #633806; } .bb { background: #e6f1fb; color: #0c447c; } .br { background: #fcebeb; color: #791f1f; } .bgr { background: #f1efe8; color: #444441; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+    .tbl th { font-size: 11px; color: #7a7567; font-weight: 500; text-align: left; padding: 6px 8px; border-bottom: 0.5px solid #ede9df; background: #faf8f3; }
+    .tbl td { padding: 7px 8px; border-bottom: 0.5px solid #f5f2eb; color: #333; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: #faf8f3; }
+    .fld { display: flex; flex-direction: column; gap: 9px; }
+    .fld label { font-size: 11px; color: #555; font-weight: 500; margin-bottom: 3px; display: block; }
+    .fld input, .fld select { width: 100%; padding: 7px 10px; border: 0.5px solid #ccc9bc; border-radius: 7px; font-size: 12px; background: #fff; color: #1a2e1e; outline: none; }
+    .fld input:focus, .fld select:focus { border-color: #1a2e1e; }
+    .prog-row { margin-bottom: 10px; }
+    .prog-lbl { display: flex; justify-content: space-between; font-size: 11.5px; color: #555; margin-bottom: 3px; }
+    .bar-t { height: 6px; background: #f0ede4; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .bar-f { height: 100%; border-radius: 3px; }
+    .sb { transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease; overflow: hidden; }
+    .sb.collapsed { width: 0 !important; min-width: 0 !important; padding: 0 !important; border: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sb">
+    <div class="sb-brand">
+      <div class="lr">
+        <div class="ic"><i class="ti ti-building-church" aria-hidden="true"></i></div>
+        <div class="nm">PCEA Dandora</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="ni active" id="ni-ad" onclick="nav('ad',this)"><i class="ti ti-settings-automation" aria-hidden="true"></i>Admin Console</div>
+      <div class="ni" id="ni-mr" onclick="nav('mr',this)"><i class="ti ti-address-book" aria-hidden="true"></i>Membership Roll</div>
+      <div class="ni" id="ni-sc" onclick="nav('sc',this)"><i class="ti ti-calendar-event" aria-hidden="true"></i>Service Schedules</div>
+      <div class="ni" id="ni-co" onclick="nav('co',this)"><i class="ti ti-shield-lock" aria-hidden="true"></i>System Controls</div>
+    </nav>
+    <div class="sb-foot">
+      <div class="ur">
+        <div class="uav-t">ADM</div>
+        <div><div class="un">Admin Desk</div><div class="uro">ADMINISTRATOR</div></div>
+      </div>
+      <div class="lo" onclick="window.location.href='index.html?logout=true'">
+        <i class="ti ti-logout" aria-hidden="true"></i>Logout
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-l">
+        <i class="ti ti-menu-2" id="sidebar-toggle" onclick="toggleSidebar()" style="font-size:18px;color:#555;cursor:pointer;" aria-hidden="true"></i>
+        <span class="pl" id="page-label">Admin Console</span>
+      </div>
+      <div class="tb-r">
+        <div class="nb"><i class="ti ti-bell" aria-hidden="true"></i><div class="nd"></div></div>
+        <div class="nb"><i class="ti ti-shield" aria-hidden="true"></i></div>
+        <div style="font-size:12px;color:#1a2e1e;font-weight:500;">SysAdmin</div>
+        <div class="uav-t">ADM</div>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- ADMIN CONSOLE PANEL -->
+      <div class="panel active" id="p-ad">
+        <div class="ph">
+          <div><h2>Parish Administration & Operations</h2><div class="sub">Core management layer for schedules, communication rolls, and permissions</div></div>
+          <button class="btn sm" onclick="showToast('Database backup initiated successfully.')"><i class="ti ti-database-export" aria-hidden="true"></i> Backup Database</button>
+        </div>
+
+        <div class="krow g4">
+          <div class="kc"><div class="kl">Total Accounts</div><div class="kv">14 Users</div><div class="kd up">Staff & Session Elders</div></div>
+          <div class="kc"><div class="kl">System Health</div><div class="kv">99.9%</div><div class="kd up">All nodes operational</div></div>
+          <div class="kc"><div class="kl">Pending Approvals</div><div class="kv">5 Transfers</div><div class="kd ba" style="color:#633806;">Inbound district requests</div></div>
+          <div class="kc"><div class="kl">SMS Gateway Bal.</div><div class="kv">8,450 Units</div><div class="kd nt">Premium Bulk active</div></div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-activity" aria-hidden="true"></i> System Request Logs (Hourly Traffic)</div></div>
+              <div style="position:relative;width:100%;height:140px;"><canvas id="c-ad1"></canvas></div>
+            </div>
+
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-history" aria-hidden="true"></i> Recent Audit Trails</div></div>
+              <table class="tbl">
+                <thead><tr><th>Timestamp</th><th>User/Operator</th><th>Action Event Description</th><th>Module</th></tr></thead>
+                <tbody>
+                  <tr><td>Just now</td><td>E. Njeri</td><td>Generated LPO-2026-044 for Christian Supplies</td><td><span class="bdg bb">Procurement</span></td></tr>
+                  <tr><td>10 mins ago</td><td>Moderator Desk</td><td>Cleared Candidate Card Class roll entries</td><td><span class="bdg bg">Sacraments</span></td></tr>
+                  <tr><td>1 hour ago</td><td>Admin Desk</td><td>Modified Sunday Youth service roster allocations</td><td><span class="bdg bgr">Schedules</span></td></tr>
+                  <tr><td>4 hours ago</td><td>Treasurer Sys</td><td>Reconciled Tithe Batch #094 against Bank API</td><td><span class="bdg ba">Finance</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-device-analytics" aria-hidden="true"></i> Storage Allocation</div></div>
+              <div style="position:relative;width:100%;height:130px;"><canvas id="c-ad2"></canvas></div>
+              <div style="margin-top:12px;">
+                <div class="prog-row"><div class="prog-lbl"><span>Database (MySQL Rows)</span><span>35%</span></div><div class="bar-t"><div class="bar-f" style="width:35%;background:#1a2e1e;"></div></div></div>
+                <div class="prog-row"><div class="prog-lbl"><span>Archived Session PDF Docs</span><span>50%</span></div><div class="bar-t"><div class="bar-f" style="width:50%;background:#ba7517;"></div></div></div>
+                <div class="prog-row"><div class="prog-lbl"><span>Free System Storage</span><span>15%</span></div><div class="bar-t"><div class="bar-f" style="width:15%;background:#e5ded0;"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMBERSHIP ROLL PANEL (UPDATED WORKSPACE WITH CREDENTIAL MANAGEMENT BELOW) -->
+      <div class="panel" id="p-mr">
+        <div class="ph">
+          <div><h2>Parish Communicant Roll</h2><div class="sub">Manage full communicants, adherents, and transfers</div></div>
+        </div>
+        
+        <div class="grid2">
+          <!-- Left Column (Active Registry & User Credentials) -->
+          <div>
+            <!-- Active Registry Card -->
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-users" aria-hidden="true"></i> Active Registry</div></div>
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>Member Code</th>
+                    <th>Full Name</th>
+                    <th>District Structure</th>
+                    <th>Status Class</th>
+                  </tr>
+                </thead>
+                <tbody id="member-table-body">
+                  <tr>
+                    <td>PCEA-M-0412</td>
+                    <td>Stephen Kamau Njoroge</td>
+                    <td>Ebenezer District</td>
+                    <td><span class="bdg bg">Full Communicant</span></td>
+                  </tr>
+                  <tr>
+                    <td>PCEA-M-0891</td>
+                    <td>Hannah Wanjiku Mwangi</td>
+                    <td>Beulah District</td>
+                    <td><span class="bdg bg">Full Communicant</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- User Credentials Management Card -->
+            <div class="card" style="margin-top: 14px;">
+              <div class="ct"><div class="ct-l"><i class="ti ti-shield-lock" aria-hidden="true"></i> User Credentials Management</div></div>
+              <form id="password-management-form" onsubmit="updateDeskPassword(event)" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: flex-end;">
+                <div class="fld">
+                  <label for="manage-role">Authorization Desk Profile</label>
+                  <select id="manage-role" required>
+                    <option value="admin">Parish Administrator</option>
+                    <option value="minister">Minister / Parish Moderator</option>
+                    <option value="session_clerk">Session Clerk</option>
+                    <option value="elder">Elder</option>
+                    <option value="treasurer">Treasurer</option>
+                  </select>
+                </div>
+                <div class="fld">
+                  <label for="new-desk-password">New Gateway Passcode/PIN</label>
+                  <input type="password" id="new-desk-password" placeholder="Enter new access key..." required />
+                </div>
+                <button type="submit" class="btn" style="height: 31px; justify-content: center;">
+                  <i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Right Column (Rapid Onboarding) -->
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-user-plus" aria-hidden="true"></i> Rapid Onboarding</div></div>
+              <div class="fld">
+                <div><label>Legal Full Name</label><input type="text" id="reg-name" placeholder="e.g. John Doe"/></div>
+                <div><label>Assigned Session District</label><select id="reg-district"><option>Ebenezer District</option><option>Beulah District</option><option>Shalom District</option><option>Jericho District</option></select></div>
+                <div><label>Membership Class Tier</label><select id="reg-class"><option>Full Communicant Carded</option><option>Adherent (Non-Communicant)</option><option>Youth / Child Roll</option></select></div>
+                <button class="btn" style="width:100%;justify-content:center;" onclick="registerMember()"><i class="ti ti-plus" aria-hidden="true"></i>Add Member Record</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SERVICE SCHEDULES PANEL -->
+      <div class="panel" id="p-sc">
+        <div class="ph">
+          <div><h2>Liturgy & Service Schedules</h2><div class="sub">Coordination parameters for regular and special Sunday assemblies</div></div>
+        </div>
+        <div class="card">
+          <div class="ct"><div class="ct-l"><i class="ti ti-calendar" aria-hidden="true"></i> Roster Configurations</div></div>
+          <table class="tbl">
+            <thead><tr><th>Service Desk Target</th><th>Time Slot</th><th>Presiding Minister / Leader</th><th>Duty Group / Choir Roster</th></tr></thead>
+            <tbody>
+              <tr><td><strong>First Service (English)</strong></td><td>07:00 AM - 08:30 AM</td><td>Rev. Parish Moderator</td><td>Praise & Worship Team A</td></tr>
+              <tr><td><strong>Main Service (Kikuyu)</strong></td><td>09:00 AM - 11:00 AM</td><td>Parish Session Evangelist</td><td>Woman's Guild Choir</td></tr>
+              <tr><td><strong>Youth Service (Teens/Young Adult)</strong></td><td>11:30 AM - 01:00 PM</td><td>Guest Youth Pastor</td><td>Youth Church Band</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SYSTEM CONTROLS PANEL -->
+      <div class="panel" id="p-co">
+        <div class="ph">
+          <div><h2>Access Matrix Controls & Security</h2><div class="sub">System global variable toggles and system authorization updates</div></div>
+        </div>
+        <div class="card">
+          <div class="ct"><div class="ct-l"><i class="ti ti-lock" aria-hidden="true"></i> Roles Access Delegation Matrix</div></div>
+          <table class="tbl">
+            <thead><tr><th>System Module Profile</th><th>Role Permissions Group</th><th>Status Check</th></tr></thead>
+            <tbody>
+              <tr><td>Finance Ledger / Statements</td><td>Parish Treasurer Profile Only</td><td><span class="bdg bg">Active Lockdown</span></td></tr>
+              <tr><td>Procurement Channels & Asset Register</td><td>Procurement Officer Desk / Session</td><td><span class="bdg bg">Active Lockdown</span></td></tr>
+              <tr><td>Judicial Court transcripts / Minutes Roll</td><td>Minister Moderator Profile Only</td><td><span class="bdg bg">Active Lockdown</span></td></tr>
+              <tr><td>System Configuration Engine / Backups</td><td>SysAdmin Core Global Profile</td><td><span class="bdg br">Superuser Master Control</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="display:none;position:absolute;top:60px;right:20px;background:#1a2e1e;color:#fff;font-size:12px;padding:10px 16px;border-radius:8px;z-index:99;align-items:center;gap:7px;"><i class="ti ti-check" aria-hidden="true"></i> <span id="toast-txt">Action executed</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const labels={'ad':'Admin Console','mr':'Membership Roll','sc':'Service Schedules','co':'System Controls'};
+
+function nav(id,el){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('p-'+id).classList.add('active');
+  document.getElementById('page-label').textContent=labels[id];
+}
+
+function showToast(str){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-txt').textContent=str;
+  t.style.display='flex';
+  setTimeout(()=>t.style.display='none',3000);
+}
+
+const logoutEl = document.querySelector('.sb-foot .lo');
+if(logoutEl && !logoutEl.hasAttribute('onclick')) {
+  logoutEl.addEventListener('click', function() {
+    window.location.href = 'index.html?logout=true';
+  });
+}
+
+setTimeout(()=>{
+  new Chart(document.getElementById('c-ad1'), {
+    type: 'line',
+    data: {
+      labels: ['08:00','10:00','12:00','14:00','16:00','18:00'],
+      datasets: [{
+        label: 'Requests',
+        data: [120, 410, 290, 580, 320, 150],
+        borderColor: '#1a2e1e',
+        backgroundColor: 'rgba(26, 46, 30, 0.03)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 1.5,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#7a7567' } },
+        y: { grid: { color: '#f0ede4' }, ticks: { font: { size: 9 }, color: '#7a7567' } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('c-ad2'), {
+    type: 'doughnut',
+    data: {
+      labels: ['DB','Files','Free'],
+      datasets: [{
+        data: [35, 50, 15],
+        backgroundColor: ['#1a2e1e','#ba7517','#e5ded0'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: { legend: { display: false } }
+    }
+  });
+}, 200);
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sb');
+  sidebar.classList.toggle('collapsed');
+}
+
+function registerMember() {
+  const nameInput = document.getElementById('reg-name');
+  const districtInput = document.getElementById('reg-district');
+  const classInput = document.getElementById('reg-class');
+  const tableBody = document.getElementById('member-table-body');
+
+  const fullName = nameInput.value.trim();
+  if (!fullName) {
+    alert('Please enter a valid legal full name before saving.');
+    return;
+  }
+
+  const randomSerial = String(Math.floor(1000 + Math.random() * 9000));
+  const newMemberCode = `PCEA-M-${randomSerial}`;
+
+  let badgeStyleClass = 'bg'; 
+  if (classInput.value === 'Adherent Roll' || classInput.value === 'Adherent (Non-Communicant)') {
+    badgeStyleClass = 'ba'; 
+  } else if (classInput.value === 'Transfer Pending') {
+    badgeStyleClass = 'ba'; 
+  } else if (classInput.value === 'Youth / Child Roll') {
+    badgeStyleClass = 'bgr'; 
+  }
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>${newMemberCode}</td>
+    <td>${fullName}</td>
+    <td>${districtInput.value}</td>
+    <td><span class="bdg ${badgeStyleClass}">${classInput.value}</span></td>
+  `;
+
+  tableBody.appendChild(newRow);
+  showToast('Member registry item created successfully.');
+  nameInput.value = '';
+}
+
+// =========================================================
+// USER CREDENTIALS MANAGEMENT BUSINESS LOGIC
+// =========================================================
+function updateDeskPassword(e) {
+  e.preventDefault();
+  const role = document.getElementById('manage-role').value;
+  const newPass = document.getElementById('new-desk-password').value.trim();
+
+  // Commit updated gateway parameters dynamically to localStorage
+  localStorage.setItem(`pcea_pass_${role}`, newPass);
+  
+  showToast(`Credentials updated for ${role.replace('_', ' ').toUpperCase()}`);
+  document.getElementById('password-management-form').reset();
+}
+</script>
+</body>
+</html>

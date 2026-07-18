@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCEA Dandora - Session Clerk Portal</title>
+  <!-- Tabler Icons CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <style>
+    /* Global Reset & Base Styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background: #f5f2eb;
+      color: #1a2e1e;
+      overflow: hidden;
+    }
+
+    /* APP LAYOUT STYLES */
+    .app { display: flex; height: 100vh; font-size: 13px; }
+    
+    /* SIDEBAR */
+    .sb { width: 220px; min-width: 220px; background: #1a2e1e; display: flex; flex-direction: column; }
+    .sb-brand { padding: 16px 14px 12px; border-bottom: 1px solid #2d4433; }
+    .sb-brand .lr { display: flex; align-items: center; gap: 9px; }
+    .sb-brand .ic { width: 34px; height: 34px; background: #c9981f; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1a2e1e; font-size: 16px; }
+    .sb-brand .nm { color: #fff; font-size: 15px; font-weight: 500; }
+    
+    .sb-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+    .ni { display: flex; align-items: center; gap: 9px; padding: 10px 14px; cursor: pointer; color: #96bfa0; font-size: 12.5px; transition: background .12s; }
+    .ni:hover { background: #253d28; color: #fff; }
+    .ni.active { background: #253d28; color: #c9981f; font-weight: 500; }
+    .ni i { font-size: 16px; flex-shrink: 0; }
+    
+    .sb-foot { padding: 12px 14px; border-top: 1px solid #2d4433; }
+    .sb-foot .ur { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .sb-foot .uav-t { width: 30px; height: 30px; border-radius: 50%; background: #faeeda; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: #633806; }
+    .sb-foot .un { color: #fff; font-size: 12px; font-weight: 500; }
+    .sb-foot .uro { color: #c9981f; font-size: 10px; letter-spacing: .5px; }
+    .sb-foot .lo { display: flex; align-items: center; gap: 7px; color: #96bfa0; font-size: 12px; cursor: pointer; }
+    .sb-foot .lo:hover { color: #fff; }
+
+    /* MAIN PANEL AREA */
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .topbar { height: 48px; background: #fff; border-bottom: 0.5px solid #ddd8cc; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+    .tb-l { display: flex; align-items: center; gap: 12px; }
+    .pl { font-size: 14px; font-weight: 500; color: #1a2e1e; }
+    .tb-r { display: flex; align-items: center; gap: 10px; }
+    .nb { width: 30px; height: 30px; border-radius: 50%; background: #f5f2eb; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #555; font-size: 16px; position: relative; }
+    .nd { width: 7px; height: 7px; background: #e24b4a; border-radius: 50%; position: absolute; top: 4px; right: 4px; }
+    .uav-t { width: 30px; height: 30px; border-radius: 50%; background: #faeeda; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: #633806; }
+    
+    .body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    
+    /* PANELS CONTENT INTERFACE ELEMENTS */
+    .ph { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+    .ph h2 { font-size: 20px; font-weight: 500; color: #1a2e1e; }
+    .ph .sub { font-size: 12px; color: #7a7567; margin-top: 3px; }
+    
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 8px; font-size: 12px; cursor: pointer; border: 0.5px solid #2d4433; background: #1a2e1e; color: #fff; text-decoration: none; font-family: inherit; }
+    .btn:hover { background: #253d28; }
+    .btn.out { background: #fff; color: #1a2e1e; border-color: #ccc9bc; }
+    .btn.out:hover { background: #f5f2eb; }
+    .btn.sm { padding: 5px 10px; font-size: 11px; }
+    
+    /* KPI METRICS ROW */
+    .krow { display: grid; gap: 10px; margin-bottom: 14px; }
+    .krow.g4 { grid-template-columns: repeat(4, 1fr); }
+    .kc { background: #fff; border: 0.5px solid #ddd8cc; border-radius: 10px; padding: 12px 14px; }
+    .kc .kl { font-size: 11px; color: #7a7567; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+    .kc .kv { font-size: 20px; font-weight: 500; color: #1a2e1e; line-height: 1.1; }
+    .kc .kd { font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 3px; }
+    .up { color: #27500a; } .dn { color: #a32d2d; } .nt { color: #7a7567; }
+    
+    /* CARDS & SPLITS */
+    .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; margin-bottom: 12px; }
+    .card { background: #fff; border: 0.5px solid #ddd8cc; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+    .card:last-child { margin-bottom: 0; }
+    .ct { font-size: 12.5px; font-weight: 500; color: #1a2e1e; margin-bottom: 11px; display: flex; align-items: center; justify-content: space-between; }
+    .ct-l { display: flex; align-items: center; gap: 6px; }
+    
+    /* BADGES */
+    .bdg { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 20px; font-size: 10.5px; font-weight: 500; }
+    .bg { background: #eaf3de; color: #27500a; } 
+    .ba { background: #faeeda; color: #633806; } 
+    
+    /* TABLES */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+    .tbl th { font-size: 11px; color: #7a7567; font-weight: 500; text-align: left; padding: 6px 8px; border-bottom: 0.5px solid #ede9df; background: #faf8f3; }
+    .tbl td { padding: 7px 8px; border-bottom: 0.5px solid #f5f2eb; color: #333; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: #faf8f3; }
+
+    /* ROW WIDGETS */
+    .fin-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid #f5f2eb; }
+    .fin-row:last-child { border-bottom: none; }
+    .fin-row .fl { font-size: 12px; color: #333; }
+    
+    .fld { display: flex; flex-direction: column; gap: 4px; }
+    .fld label { font-size: 11.5px; color: #555; font-weight: 500; margin-bottom: 2px; }
+    .fld textarea, .fld select, .fld input { width: 100%; padding: 8px 10px; border: 0.5px solid #ccc9bc; border-radius: 7px; font-size: 12.5px; background: #fff; color: #1a2e1e; font-family: inherit; outline: none; }
+    .fld select:focus, .fld input:focus, .fld textarea:focus { border-color: #1a2e1e; }
+    
+    .agenda-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid #f5f2eb; align-items: flex-start; }
+    .agenda-item:last-child { border-bottom: none; }
+    .agenda-num { font-weight: bold; color: #c9981f; width: 18px; }
+
+    .sb {
+      transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease;
+      overflow: hidden;
+    }
+
+    .sb.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+
+    /* Style rule for compiled stats visualization block */
+    .stats-preview-box {
+      margin-top: 16px;
+      border-top: 1px dashed #ccc9bc;
+      padding-top: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR NAVIGATION -->
+  <div class="sb">
+    <div class="sb-brand">
+      <div class="lr">
+        <div class="ic"><i class="ti ti-building-church" aria-hidden="true"></i></div>
+        <div class="nm">PCEA Dandora</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="ni active" id="ni-ov" onclick="nav('ov',this)"><i class="ti ti-layout-dashboard" aria-hidden="true"></i>Overview</div>
+      <div class="ni" id="ni-mi" onclick="nav('mi',this)"><i class="ti ti-file-text" aria-hidden="true"></i>Session Minutes</div>
+      <div class="ni" id="ni-mr" onclick="nav('mr',this)"><i class="ti ti-users" aria-hidden="true"></i>Member Rolls</div>
+      <div class="ni" id="ni-ag" onclick="nav('ag',this)"><i class="ti ti-calendar-event" aria-hidden="true"></i>Agendas & Meetings</div>
+      <div class="ni" id="ni-li" onclick="nav('li',this)"><i class="ti ti-shield-lock" aria-hidden="true"></i>User Credentials</div>
+      <div class="ni" id="ni-st" onclick="nav('st',this)"><i class="ti ti-chart-dots" aria-hidden="true"></i>Annual Reports</div>
+    </nav>
+    <div class="sb-foot">
+      <div class="ur">
+        <div class="uav-t">EN</div>
+        <div>
+          <div class="un">E. Njuguna</div>
+          <div class="uro">SESSION CLERK</div>
+        </div>
+      </div>
+      <div class="lo" onclick="triggerLogout()">
+        <i class="ti ti-logout" aria-hidden="true"></i>Logout
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER --> 
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-l">
+        <i class="ti ti-menu-2" id="sidebar-toggle" onclick="toggleSidebar()" style="font-size:18px;color:#555;cursor:pointer;" aria-hidden="true"></i>
+        <span class="pl" id="page-label">Session governance overview</span>
+      </div>
+      <div class="tb-r">
+        <div class="nb"><i class="ti ti-bell" aria-hidden="true"></i><div class="nd"></div></div>
+        <div class="nb"><i class="ti ti-search" aria-hidden="true"></i></div>
+        <div style="font-size:12px;color:#1a2e1e;font-weight:500;">E. Njuguna</div>
+        <div class="uav-t">EN</div>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- OVERVIEW PANEL -->
+      <div class="panel active" id="p-ov">
+        <div class="ph">
+          <div>
+            <h2>Session Clerk Dashboard</h2>
+            <div class="sub">Governance, Records & Congregational Tracking</div>
+          </div>
+          <div style="display:flex;gap:7px;">
+            <!-- Updated button with an ID hook -->
+            <button class="btn out sm" id="exportRollsBtn"><i class="ti ti-download" aria-hidden="true"></i>Export Rolls</button>
+            <button class="btn sm" onclick="document.getElementById('ni-mi').click()"><i class="ti ti-plus" aria-hidden="true"></i>New Minutes Entry</button>
+          </div>
+        </div>
+        
+        <div class="krow g4">
+          <div class="kc"><div class="kl">Total Registered Members</div><div class="kv">1,284</div><div class="kd up"><i class="ti ti-trending-up"></i> +3% this quarter</div></div>
+          <div class="kc"><div class="kl">Active Districts</div><div class="kv">12</div><div class="kd nt">Fully organized</div></div>
+          <div class="kc"><div class="kl">Next Scheduled Session</div><div class="kv" style="font-size: 16px; padding-top:4px;">July 12, 2026</div><div class="kd ba"><i class="ti ti-checks"></i> Agenda finalized</div></div>
+          <div class="kc"><div class="kl">Annual Report Status</div><div class="kv" style="color:#27500a;">85% Done</div><div class="kd up"><i class="ti ti-edit"></i> Drafting statistics</div></div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="ct">
+                <div class="ct-l"><i class="ti ti-history" aria-hidden="true"></i> Recent Session & Congregational Minutes</div>
+                <span class="bdg bg">Archived</span>
+              </div>
+              <table class="tbl">
+                <thead>
+                  <tr><th>Meeting Type</th><th>Date</th><th>Presided By</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><b>LCC Local Church Committee</b></td><td>June 14, 2026</td><td>Rev. J. Maina</td><td><span class="bdg bg">Confirmed</span></td></tr>
+                  <tr><td><b>Full Session Meeting</b></td><td>May 17, 2026</td><td>Rev. J. Maina</td><td><span class="bdg bg">Confirmed</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-user-check" aria-hidden="true"></i> Minister Support Tasks</div></div>
+              <div class="fin-row"><span class="fl">Pulpit Supply Plan</span><span class="bdg bg">Ready</span></div>
+              <div class="fin-row"><span class="fl">District Visitation Schedule</span><span class="bdg ba">In Progress</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSION MINUTES PANEL -->
+      <div class="panel" id="p-mi">
+        <div class="ph">
+          <div><h2>Session & Congregational Minutes</h2><div class="sub">Official Repository and Preservation of Church History</div></div>
+        </div>
+        <div class="card">
+          <div class="ct"><div class="ct-l"><i class="ti ti-file-text" aria-hidden="true"></i> History Logging Log</div></div>
+          <div class="fld" style="margin-bottom:15px;">
+            <label for="minutesNarrative">Minutes Narrative & Resolutions</label>
+            <textarea id="minutesNarrative" rows="6" placeholder="Type verified decisions, resolutions, and session logs here..."></textarea>
+          </div>
+          <button id="commitHistoryBtn" class="btn"><i class="ti ti-device-floppy" aria-hidden="true"></i> Commit to History Book</button>
+        </div>
+      </div>
+
+      <!-- MEMBER ROLLS PANEL -->
+      <div class="panel" id="p-mr">
+        <div class="ph">
+          <div><h2>Membership Rolls & Registers</h2><div class="sub">Accurate Church Registry Management</div></div>
+        </div>
+        <div class="card">
+          <div class="ct"><div class="ct-l"><i class="ti ti-users" aria-hidden="true"></i> Communicant Register</div></div>
+          <table class="tbl">
+            <thead>
+              <tr><th>Member Code</th><th>Full Name</th><th>District Belonging</th><th>Status Group</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>PCEA-DN-0024</td><td>David Gitau</td><td>Dandora Central</td><td><span class="bdg bg">Communicant</span></td></tr>
+              <tr><td>PCEA-DN-0112</td><td>Mary Wambui</td><td>Muoroto District</td><td><span class="bdg bg">Communicant</span></td></tr>
+              <tr><td>PCEA-DN-0439</td><td>John Mwangi</td><td>Amani District</td><td><span class="bdg ba">Adherent</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AGENDAS PANEL -->
+      <div class="panel" id="p-ag">
+        <div class="ph">
+          <div><h2>Meeting Coordination & Agendas</h2><div class="sub">Prepare structural formats for future leadership councils</div></div>
+        </div>
+        <div class="card">
+          <div class="ct"><div class="ct-l"><i class="ti ti-list-numbered" aria-hidden="true"></i> Upcoming Docket Agenda Orders</div></div>
+          <div class="agenda-item"><div class="agenda-num">1.</div><div>Constitution of Court via Prayer</div></div>
+          <div class="agenda-item"><div class="agenda-num">2.</div><div>Reading and Confirmation of Previous Minutes</div></div>
+          <div class="agenda-item"><div class="agenda-num">3.</div><div>Matters Arising from the Minutes</div></div>
+          <div class="agenda-item"><div class="agenda-num">4.</div><div>District Progress & Welfare Reports</div></div>
+        </div>
+      </div>
+
+      <!-- USER CREDENTIALS MANAGEMENT PANEL -->
+      <div class="panel" id="p-li">
+        <div class="ph">
+          <div><h2>User Credentials Management</h2><div class="sub">Update access keys and security configurations for the authorization gateway</div></div>
+        </div>
+        <div class="card" style="max-width: 500px;">
+          <div class="ct"><div class="ct-l"><i class="ti ti-shield-lock" aria-hidden="true"></i> Gatekeeper System Access Configuration</div></div>
+          
+          <form id="password-management-form" onsubmit="updateDeskPassword(event)">
+            <div class="fld" style="margin-bottom: 12px;">
+              <label for="manage-role">Select Desired Authorization Desk</label>
+              <select id="manage-role" required>
+                <option value="admin">Parish Administrator</option>
+                <option value="minister">Minister / Parish Moderator</option>
+                <option value="session_clerk">Session Clerk</option>
+                <option value="elder">Elder</option>
+                <option value="treasurer">Treasurer</option>
+              </select>
+            </div>
+
+            <div class="fld" style="margin-bottom: 16px;">
+              <label for="new-desk-password">New Gateway Password</label>
+              <input type="password" id="new-desk-password" placeholder="Enter new access secure pin..." required />
+            </div>
+
+            <button type="submit" class="btn">
+              <i class="ti ti-device-floppy" aria-hidden="true"></i> Save Configuration Updates
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ANNUAL REPORTS PANEL -->
+      <div class="panel" id="p-st">
+        <div class="ph">
+          <div><h2>Annual Reports & Statistics</h2><div class="sub">Compile numerical values, growth matrices, and strategic outputs</div></div>
+        </div>
+        <div class="card">
+          <div class="ct"><div class="ct-l"><i class="ti ti-chart-bar" aria-hidden="true"></i> General Assembly Statistical Return</div></div>
+          <p style="margin-bottom: 15px; color:#555; line-height:1.4;">Generate automated summaries of demographic variables, communicant health metrics, and overall census updates for the yearly GA submission.</p>
+          <button id="compileGaBtn" class="btn"><i class="ti ti-file-analytics" aria-hidden="true"></i> Compile Global GA Statistics Return</button>
+          
+          <!-- Real-time statistics visualization container -->
+          <div id="statsPreviewBox" class="stats-preview-box">
+            <div class="ct"><div class="ct-l"><i class="ti ti-eye" aria-hidden="true"></i> Compiled Return Summary Draft</div></div>
+            <div class="krow g4" style="margin-top: 10px;">
+              <div class="kc"><div class="kl">Total Members</div><div class="kv" id="stat-total">0</div></div>
+              <div class="kc"><div class="kl">Active Communicants</div><div class="kv" id="stat-active">0</div></div>
+              <div class="kc"><div class="kl">Male Count</div><div class="kv" id="stat-male">0</div></div>
+              <div class="kc"><div class="kl">Female Count</div><div class="kv" id="stat-female">0</div></div>
+            </div>
+            <div class="card" style="margin-top: 12px; background: #faf8f3; border-color: #ede9df;">
+              <div class="ct"><div class="ct-l"><i class="ti ti-map-pin" aria-hidden="true"></i> District Aggregations</div></div>
+              <table class="tbl" id="district-stat-table">
+                <thead>
+                  <tr><th>District Name</th><th>Active Census Tally</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="2" style="color: #7a7567; text-align: center;">No metrics compiled yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/dashboard.js"></script> 
+<script>
+  // Dynamic Authentication Verification
+  window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem('pcea_active_role') !== 'session_clerk') {
+      window.location.href = 'index.html';
+    }
+  });
+
+  function nav(panelId, element) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+    
+    document.getElementById('p-' + panelId).classList.add('active');
+    element.classList.add('active');
+    
+    const textLabels = {
+      'ov': 'Session governance overview',
+      'mi': 'Preservation of historical session minutes',
+      'mr': 'Accurate congregational rolls tracking',
+      'ag': 'Agenda coordination and meetings desk',
+      'li': 'User credentials system desk',
+      'st': 'Annual metrics & church statistics'
+    };
+    document.getElementById('page-label').innerText = textLabels[panelId];
+  }
+
+  function triggerLogout() {
+    sessionStorage.removeItem('pcea_active_role');
+    window.location.href = 'index.html?logout=true';
+  }
+  
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sb');
+    sidebar.classList.toggle('collapsed');
+  }
+
+  // =========================================================
+  // USER CREDENTIALS MANAGEMENT LOGIC
+  // =========================================================
+  function updateDeskPassword(e) {
+    e.preventDefault();
+    const role = document.getElementById('manage-role').value;
+    const newPass = document.getElementById('new-desk-password').value.trim();
+
+    // Store the updated desk key securely inside LocalStorage
+    localStorage.setItem(`pcea_pass_${role}`, newPass);
+    
+    alert(`✨ Security Configuration Saved!\nGateway access pass for "${role.replace('_', ' ').toUpperCase()}" updated.`);
+    document.getElementById('password-management-form').reset();
+  }
+
+  // =========================================================
+  // COMMIT TO HISTORY BOOK BUSINESS LOGIC
+  // =========================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    const commitBtn = document.getElementById('commitHistoryBtn');
+    const narrativeTextarea = document.getElementById('minutesNarrative');
+
+    if (commitBtn && narrativeTextarea) {
+      commitBtn.addEventListener('click', async () => {
+        const narrative = narrativeTextarea.value.trim();
+
+        if (!narrative) {
+          alert('Please type verified decisions or resolutions before committing.');
+          return;
+        }
+
+        commitBtn.disabled = true;
+        commitBtn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> Committing...';
+
+        try {
+          const response = await fetch('http://localhost:5000/api/session/history', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              narrative: narrative,
+              committedBy: 'E. Njuguna', 
+              role: 'SESSION CLERK'
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert('✨ Official records successfully committed to the History Book!');
+            narrativeTextarea.value = ''; 
+          } else {
+            alert(`Error: ${data.message || 'Failed to preserve historical log record.'}`);
+          }
+        } catch (error) {
+          console.error('Submission failure error context:', error);
+          alert('A network exception error occurred. Please verify backend state routing options.');
+        } finally {
+          commitBtn.disabled = false;
+          commitBtn.innerHTML = '<i class="ti ti-device-floppy" aria-hidden="true"></i> Commit to History Book';
+        }
+      });
+    }
+  });
+
+  // =========================================================
+  // AUTOMATED GLOBAL GA STATISTICS COMPILATION LOGIC
+  // =========================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    const compileBtn = document.getElementById('compileGaBtn');
+    const previewContainer = document.getElementById('statsPreviewBox');
+
+    if (compileBtn) {
+      compileBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // 1. UI Loading Feedback
+        compileBtn.disabled = true;
+        const originalContent = compileBtn.innerHTML;
+        compileBtn.innerHTML = '<i class="ti ti-loader-2 ti-spin" aria-hidden="true"></i> Aggregating Database Records...';
+
+        try {
+          // 2. Fetch metrics summary payload from the backend server
+          const response = await fetch('http://localhost:5000/api/reports/compile-ga-stats');
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Server processing error occurred during summary generation.');
+          }
+
+          // 3. Render base summary counters
+          document.getElementById('stat-total').innerText = data.summary.totalMembers.toLocaleString();
+          document.getElementById('stat-active').innerText = data.summary.activeCommunicants.toLocaleString();
+
+          // Initialize default gender balances
+          let maleCount = 0, femaleCount = 0;
+          data.genderDemographics.forEach(item => {
+            if (item.gender && item.gender.toLowerCase() === 'male') maleCount = item.count;
+            if (item.gender && item.gender.toLowerCase() === 'female') femaleCount = item.count;
+          });
+          document.getElementById('stat-male').innerText = maleCount.toLocaleString();
+          document.getElementById('stat-female').innerText = femaleCount.toLocaleString();
+
+          // 4. Render complete dynamic row components inside the district layout
+          const tableBody = document.querySelector('#district-stat-table tbody');
+          tableBody.innerHTML = ''; // Reset loading string
+
+          if (data.districtBreakdown && data.districtBreakdown.length > 0) {
+            data.districtBreakdown.forEach(dist => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td><b>${dist.district_name}</b></td><td>${dist.member_count.toLocaleString()} members</td>`;
+              tableBody.appendChild(tr);
+            });
+          } else {
+            tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#7a7567;">No active records identified.</td></tr>`;
+          }
+
+          // 5. Visual reveal transition 
+          previewContainer.style.display = 'block';
+          alert('✨ Statistical return data derived successfully! Ready for General Assembly validation.');
+
+        } catch (error) {
+          console.error('Compilation routine exception:', error);
+          alert(`Compilation Failed: ${error.message}`);
+        } finally {
+          // 6. Restore original interface variables
+          compileBtn.disabled = false;
+          compileBtn.innerHTML = originalContent;
+        }
+      });
+    }
+  });
+
+  // =========================================================
+  // MEMBERSHIP ROLLS CSV EXPORT FUNCTIONALITY
+  // =========================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    const exportBtn = document.getElementById('exportRollsBtn');
+
+    if (exportBtn) {
+      exportBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        exportBtn.disabled = true;
+        const originalText = exportBtn.innerHTML;
+        exportBtn.innerHTML = '<i class="ti ti-loader-2 ti-spin" aria-hidden="true"></i> Generating CSV...';
+
+        try {
+          // Adjust backend port here if yours differs from 5000
+          const response = await fetch('http://localhost:5000/api/reports/export-rolls');
+          
+          if (!response.ok) {
+            throw new Error('Failed to assemble database records into exportable sheets.');
+          }
+
+          const blob = await response.blob();
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const tempLink = document.createElement('a');
+          tempLink.href = downloadUrl;
+          tempLink.setAttribute('download', 'PCEA_Dandora_Member_Rolls.csv');
+          
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          
+          document.body.removeChild(tempLink);
+          window.URL.revokeObjectURL(downloadUrl);
+
+        } catch (error) {
+          console.error('Export handling process caught exception:', error);
+          alert('Export Error: Check that the backend server is active and CORS configurations allow file streaming.');
+        } finally {
+          exportBtn.disabled = false;
+          exportBtn.innerHTML = originalText;
+        }
+      });
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCEA Dandora - Portal Gateway</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background: #edf4f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .login-container {
+      background: #fff;
+      border: 0.5px solid #ddd8cc;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      padding: 30px 24px;
+      box-shadow: 0 4px 12px rgba(26, 46, 30, 0.03);
+      position: relative;
+    }
+    .brand-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .brand-header .logo-img {
+      height: 90px;
+      width: auto;   
+      object-fit: contain;
+      margin-bottom: 12px;
+    }
+    .brand-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #020652;
+    }
+    .brand-header p {
+      font-size: 12px;
+      color: #100f0d;
+      margin-top: 4px;
+    }
+    .fld {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .fld-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .fld-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .fld-item label {
+      font-size: 11.5px;
+      color: #555;
+      font-weight: 500;
+    }
+    .forgot-link {
+      font-size: 11px;
+      color: #1050d0;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrapper i {
+      position: absolute;
+      left: 10px;
+      color: #7a7567;
+      font-size: 16px;
+    }
+    .input-wrapper input, .input-wrapper select {
+      width: 100%;
+      padding: 9px 10px 9px 34px;
+      border: 0.5px solid #ccc9bc;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+      color: #1a2e1e;
+      outline: none;
+    }
+    .input-wrapper input:focus, .input-wrapper select:focus {
+      border-color: #1a2e1e;
+    }
+    .btn {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 0.5px solid #04011e;
+      background: #01114f;
+      color: #fff;
+      transition: background .12s;
+    }
+    .btn:hover {
+      background: #1050d0;
+    }
+    .error-box {
+      background: #fcebeb;
+      border: 0.5px solid #ebb3b3;
+      color: #791f1f;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 14px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+    #toast {
+      display: none;
+      position: absolute;
+      top: -60px;
+      left: 0;
+      right: 0;
+      background: #1a2e1e;
+      color: #fff;
+      font-size: 12px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      box-shadow: 0 4px 12px rgba(26, 46, 30, 0.1);
+      animation: slideDown 0.3s ease forwards;
+    }
+    @keyframes slideDown {
+      to { top: -50px; }
+    }
+
+    /* --- Forgot Password Modal --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(2, 6, 82, 0.2);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 360px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 0.5px solid #ddd8cc;
+      animation: scaleUp 0.2s ease-out;
+    }
+    @keyframes scaleUp {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-card h3 {
+      font-size: 16px;
+      color: #020652;
+      margin-bottom: 8px;
+    }
+    .modal-card p {
+      font-size: 12.5px;
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn-secondary {
+      background: #f1f3f5;
+      border: 0.5px solid #ccc9bc;
+      color: #444;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { background: #e4e7eb; }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div id="toast"><i class="ti ti-check"></i> <span>Logged out securely.</span></div>
+
+  <div class="brand-header">
+    <img src="pcea-logo.jpeg" onerror="this.onerror=null; this.src='pcea-logo.jpg';" alt="PCEA Logo" class="logo-img">
+    <h1>PCEA DANDORA</h1>
+    <p>Parish Management System Gateway</p>
+  </div>
+  
+  <div class="error-box" id="error-msg">
+    <i class="ti ti-alert-circle"></i>
+    <span>Invalid password configuration for selected desk.</span>
+  </div>
+
+  <form id="login-form" onsubmit="handleLogin(event)">
+    <div class="fld">
+      <div class="fld-item">
+        <div class="fld-header-row">
+          <label>Select Authorization Desk</label>
+        </div>
+        <div class="input-wrapper">
+          <i class="ti ti-user-shield"></i>
+          <select id="role-select" onchange="updatePlaceholder()">
+            <option value="admin">Parish Administrator</option>
+            <option value="minister">Minister / Parish Moderator</option>
+            <option value="session_clerk">Session Clerk</option>
+            <option value="elder">Elder</option>
+            <option value="treasurer">Treasurer</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fld-item">
+        <div class="fld-header-row">
+          <label>Password</label>
+          <a href="#" class="forgot-link" onclick="openForgotModal(event)">Forgot Password?</a>
+        </div>
+        <div class="input-wrapper">
+          <i class="ti ti-lock"></i>
+          <input type="password" id="pass-input" placeholder="Enter admin pass..." required />
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn">
+      <i class="ti ti-login"></i> Secure Sign In
+    </button>
+  </form>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal-overlay" id="forgot-modal" onclick="closeForgotModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <h3>Password Reset Request</h3>
+    <p>For security compliance within the Parish Management System Gateway, credentials can only be reset by the System IT Administrator or the Session Clerk.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeForgotModal(event)">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 1. MATCH TO YOUR EXACT FILENAMES
+  const routes = {
+    'admin': 'admin.html',
+    'minister': 'minister.html',
+    'session_clerk': 'sessionclerk.html',
+    'elder': 'elder.html',
+    'treasurer': 'treasurer.html'
+  };
+
+  // Default fallback credentials if none are saved yet
+  const defaultPasswords = {
+    'admin': 'admin123',
+    'minister': 'moderator2026',
+    'session_clerk': 'clerk456',
+    'elder': 'elder789',
+    'treasurer': 'money2026'
+  };
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // Populate defaults ONLY if the user hasn't explicitly saved a custom password yet
+    Object.keys(defaultPasswords).forEach(role => {
+      if (!localStorage.getItem(`pcea_pass_${role}`)) {
+        localStorage.setItem(`pcea_pass_${role}`, defaultPasswords[role]);
+      }
+    });
+
+    // Check for logout parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout') === 'true') {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }, 3000);
+    }
+    
+    // Set dynamic placeholder for the default visible selection
+    updatePlaceholder();
+  });
+
+  function updatePlaceholder() {
+    const role = document.getElementById('role-select').value;
+    const cleanRoleName = role.replace('_', ' ');
+    document.getElementById('pass-input').placeholder = `Enter ${cleanRoleName} pass...`;
+    document.getElementById('error-msg').style.display = 'none';
+  }
+
+  // 2. LIVE ACCESS VERIFICATION & DYNAMIC ROUTING
+  function handleLogin(e) {
+    e.preventDefault();
+    const role = document.getElementById('role-select').value;
+    const inputPassword = document.getElementById('pass-input').value.trim();
+    const errorBox = document.getElementById('error-msg');
+
+    // Pull the absolute freshest saved string from localStorage
+    const savedPassword = localStorage.getItem(`pcea_pass_${role}`);
+
+    if (inputPassword === savedPassword) {
+      errorBox.style.display = 'none';
+      sessionStorage.setItem('pcea_active_role', role);
+      document.getElementById('pass-input').value = '';
+      
+      // Redirects to your exact workspace files (e.g., admin.html, elder.html)
+      window.location.href = routes[role];
+    } else {
+      errorBox.style.display = 'flex';
+    }
+  }
+
+  // --- Modal Controllers ---
+  function openForgotModal(e) {
+    e.preventDefault();
+    document.getElementById('forgot-modal').style.display = 'flex';
+  }
+
+  function closeForgotModal(e) {
+    if(e) e.preventDefault();
+    document.getElementById('forgot-modal').style.display = 'none';
+  }
+</script>
+</body>
+</html>

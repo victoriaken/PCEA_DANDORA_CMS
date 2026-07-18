@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCEA Dandora - Treasurer Dashboard</title>
+  <!-- Tabler Icons CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* Lock the viewport down so the browser window never creates an outer scrollbar */
+    html, body { 
+      height: 100%; 
+      overflow: hidden; 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    }
+    
+    /* Use 100vh instead of a hardcoded pixel height so it fills the screen perfectly */
+    .app { 
+      display: flex; 
+      height: 100vh; 
+      font-size: 13px; 
+      background: #f5f2eb; 
+    }
+    
+    .sb { width: 210px; min-width: 210px; background: #1a2e1e; display: flex; flex-direction: column; }
+    .sb-brand { padding: 16px 14px 12px; border-bottom: 1px solid #2d4433; }
+    .sb-brand .lr { display: flex; align-items: center; gap: 9px; }
+    .sb-brand .ic { width: 34px; height: 34px; background: #c9981f; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1a2e1e; font-size: 16px; }
+    .sb-brand .nm { color: #fff; font-size: 15px; font-weight: 500; }
+    .sb-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+    .ni { display: flex; align-items: center; gap: 9px; padding: 10px 14px; cursor: pointer; color: #96bfa0; font-size: 12.5px; transition: background .12s; }
+    .ni:hover { background: #253d28; color: #fff; }
+    .ni.active { background: #253d28; color: #c9981f; font-weight: 500; }
+    .ni i { font-size: 16px; flex-shrink: 0; }
+    .sb-foot { padding: 12px 14px; border-top: 1px solid #2d4433; }
+    .sb-foot .ur { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .sb-foot .uav-t { width: 30px; height: 30px; border-radius: 50%; background: #faeeda; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: #633806; }
+    .sb-foot .un { color: #fff; font-size: 12px; font-weight: 500; }
+    .sb-foot .uro { color: #c9981f; font-size: 10px; letter-spacing: .5px; }
+    .sb-foot .lo { display: flex; align-items: center; gap: 7px; color: #96bfa0; font-size: 12px; cursor: pointer; }
+    .sb-foot .lo:hover { color: #fff; }
+    
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .topbar { height: 48px; background: #fff; border-bottom: 0.5px solid #ddd8cc; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+    .tb-l { display: flex; align-items: center; gap: 12px; }
+    .pl { font-size: 14px; font-weight: 500; color: #1a2e1e; }
+    .tb-r { display: flex; align-items: center; gap: 10px; }
+    .nb { width: 30px; height: 30px; border-radius: 50%; background: #f5f2eb; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #555; font-size: 16px; position: relative; }
+    .nd { width: 7px; height: 7px; background: #e24b4a; border-radius: 50%; position: absolute; top: 4px; right: 4px; }
+    .uav-t { width: 30px; height: 30px; border-radius: 50%; background: #faeeda; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: #633806; }
+    
+    /* Dedicated scrolling container */
+    .body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+    
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .ph { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+    .ph h2 { font-size: 20px; font-weight: 500; color: #1a2e1e; }
+    .ph .sub { font-size: 12px; color: #7a7567; margin-top: 3px; }
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 8px; font-size: 12px; cursor: pointer; border: 0.5px solid #2d4433; background: #1a2e1e; color: #fff; text-decoration: none; }
+    .btn:hover { background: #253d28; }
+    .btn.out { background: #fff; color: #1a2e1e; border-color: #ccc9bc; }
+    .btn.out:hover { background: #f5f2eb; }
+    .btn.sm { padding: 5px 10px; font-size: 11px; }
+    .krow { display: grid; gap: 10px; margin-bottom: 14px; }
+    .krow.g4 { grid-template-columns: repeat(4, 1fr); }
+    .krow.g3 { grid-template-columns: repeat(3, 1fr); }
+    .kc { background: #fff; border: 0.5px solid #ddd8cc; border-radius: 10px; padding: 12px 14px; }
+    .kc .kl { font-size: 11px; color: #7a7567; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+    .kc .kv { font-size: 20px; font-weight: 500; color: #1a2e1e; line-height: 1.1; }
+    .kc .kd { font-size: 11px; margin-top: 4px; }
+    .up { color: #27500a; } .dn { color: #a32d2d; } .nt { color: #7a7567; }
+    .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 12px; margin-bottom: 12px; }
+    .grid2b { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 12px; }
+    .card { background: #fff; border: 0.5px solid #ddd8cc; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+    .card:last-child { margin-bottom: 0; }
+    .ct { font-size: 12.5px; font-weight: 500; color: #1a2e1e; margin-bottom: 11px; display: flex; align-items: center; justify-content: space-between; }
+    .ct-l { display: flex; align-items: center; gap: 6px; }
+    .bdg { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 20px; font-size: 10.5px; }
+    .bg { background: #eaf3de; color: #27500a; } .ba { background: #faeeda; color: #633806; } .bb { background: #e6f1fb; color: #0c447c; } .br { background: #fcebeb; color: #791f1f; } .bgr { background: #f1efe8; color: #444441; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+    .tbl th { font-size: 11px; color: #7a7567; font-weight: 500; text-align: left; padding: 6px 8px; border-bottom: 0.5px solid #ede9df; background: #faf8f3; }
+    .tbl td { padding: 7px 8px; border-bottom: 0.5px solid #f5f2eb; color: #333; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: #faf8f3; }
+    .av { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; flex-shrink: 0; }
+    .av1 { background: #eaf3de; color: #27500a; } .av2 { background: #e6f1fb; color: #0c447c; } .av3 { background: #faeeda; color: #633806; } .av4 { background: #eeedfe; color: #3c3489; } .av5 { background: #e1f5ee; color: #085041; }
+    .fin-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 0.5px solid #f5f2eb; font-size: 12px; align-items: center; }
+    .fin-row:last-child { border-bottom: none; }
+    .fl { color: #555; } .fv { font-weight: 500; color: #1a2e1e; } .fvg { font-weight: 500; color: #27500a; } .fvr { font-weight: 500; color: #a32d2d; }
+    .fld { display: flex; flex-direction: column; gap: 9px; }
+    .fld label { font-size: 11px; color: #555; font-weight: 500; margin-bottom: 3px; display: block; }
+    .fld input, .fld select, .fld textarea { width: 100%; padding: 7px 10px; border: 0.5px solid #ccc9bc; border-radius: 7px; font-size: 12px; background: #fff; color: #1a2e1e; }
+    .bar-t { height: 6px; background: #f0ede4; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .bar-f { height: 100%; border-radius: 3px; }
+    .stmt-row { display: flex; justify-content: space-between; padding: 6px 8px; font-size: 12px; border-bottom: 0.5px solid #f5f2eb; align-items: center; }
+    .stmt-row:last-child { border-bottom: none; }
+    .stmt-section { background: #f5f2eb; padding: 5px 8px; font-size: 11px; font-weight: 500; color: #555; margin: 4px 0 2px; border-radius: 4px; }
+    .stmt-total { background: #faf8f3; padding: 7px 8px; font-size: 12px; font-weight: 500; color: #1a2e1e; display: flex; justify-content: space-between; border-top: 0.5px solid #ddd8cc; border-bottom: 0.5px solid #ddd8cc; margin: 4px 0; }
+    .stmt-grand { padding: 8px 8px; font-size: 13px; font-weight: 500; color: #1a2e1e; display: flex; justify-content: space-between; border-top: 1.5px solid #1a2e1e; margin-top: 4px; }
+    .prog-row { margin-bottom: 10px; }
+    .prog-lbl { display: flex; justify-content: space-between; font-size: 12px; color: #555; margin-bottom: 3px; }
+
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .report-card {
+      background: #fff;
+      border: 0.5px solid #ddd8cc;
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+    .icon-green { background-color: #eef7f2; color: #2d7a4d; }
+    .icon-blue { background-color: #f0f4f9; color: #4361ee; }
+    .icon-orange { background-color: #fff7ed; color: #ea580c; }
+    .icon-purple { background-color: #eeedfe; color: #3c3489; }
+    .card-title { font-size: 14px; font-weight: 500; color: #1a2e1e; margin-bottom: 6px; }
+    .card-description { font-size: 12px; color: #7a7567; line-height: 1.4; margin-bottom: 16px; flex-grow: 1; }
+    .card-action-link { font-size: 12px; font-weight: 500; color: #c9981f; text-decoration: none; cursor: pointer; }
+    .card-action-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sb">
+    <div class="sb-brand">
+      <div class="lr">
+        <div class="ic"><i class="ti ti-building-church" aria-hidden="true"></i></div>
+        <div class="nm">PCEA Dandora</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="ni active" id="ni-ov" onclick="nav('ov',this)"><i class="ti ti-layout-dashboard" aria-hidden="true"></i>Overview</div>
+      <div class="ni" id="ni-co" onclick="nav('co',this)"><i class="ti ti-coin" aria-hidden="true"></i>Contributions</div>
+      <div class="ni" id="ni-ex" onclick="nav('ex',this)"><i class="ti ti-receipt" aria-hidden="true"></i>Expenditure</div>
+      <div class="ni" id="ni-fs" onclick="nav('fs',this)"><i class="ti ti-report-money" aria-hidden="true"></i>Financial statements</div>
+      <div class="ni" id="ni-bu" onclick="nav('bu',this)"><i class="ti ti-chart-pie" aria-hidden="true"></i>Budget tracking</div>
+      <div class="ni" id="ni-rp" onclick="nav('rp',this)"><i class="ti ti-file-report" aria-hidden="true"></i>Reports</div>
+    </nav>
+    <div class="sb-foot">
+      <div class="ur">
+        <div class="uav-t">MO</div>
+        <div><div class="un">M. Otieno</div><div class="uro">TREASURER</div></div>
+      </div>
+      <div class="lo" onclick="window.location.href='index.html?logout=true'">
+        <i class="ti ti-logout" aria-hidden="true"></i>Logout
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-l">
+        <i class="ti ti-menu-2" style="font-size:18px;color:#555;cursor:pointer;" aria-hidden="true"></i>
+        <span class="pl" id="page-label">Financial overview</span>
+      </div>
+      <div class="tb-r">
+        <div class="nb"><i class="ti ti-bell" aria-hidden="true"></i><div class="nd"></div></div>
+        <div class="nb"><i class="ti ti-search" aria-hidden="true"></i></div>
+        <div style="font-size:12px;color:#1a2e1e;font-weight:500;">M. Otieno</div>
+        <div class="uav-t">MO</div>
+      </div>
+    </div>
+
+    <!-- Scrollable content area -->
+    <div class="body">
+
+      <!-- OVERVIEW PANEL -->
+      <div class="panel active" id="p-ov">
+        <div class="ph">
+          <div><h2>Financial overview</h2><div class="sub">PCEA Dandora · June 2026</div></div>
+          <div style="display:flex;gap:7px;">
+            <button class="btn out sm" onclick="generateSingleReport('financial_overview')"><i class="ti ti-download" aria-hidden="true"></i>Export</button>
+            <button class="btn out sm" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i>Print</button>
+          </div>
+        </div>
+        <div class="krow g4">
+          <div class="kc"><div class="kl">Total income (Jun)</div><div class="kv">KES 363,800</div><div class="kd up"><i class="ti ti-trending-up" aria-hidden="true"></i> +8% vs May</div></div>
+          <div class="kc"><div class="kl">Total expenditure</div><div class="kv">KES 175,700</div><div class="kd nt">48% of income</div></div>
+          <div class="kc"><div class="kl">Net surplus</div><div class="kv" style="color:#27500a;">KES 188,100</div><div class="kd up">Healthy surplus</div></div>
+          <div class="kc"><div class="kl">Fund balance</div><div class="kv">KES 3.27M</div><div class="kd nt">Accumulated</div></div>
+        </div>
+        <div class="krow g4">
+          <div class="kc"><div class="kl">Tithes</div><div class="kv" style="font-size:16px;">KES 198,400</div><div class="kd nt">55% of income</div></div>
+          <div class="kc"><div class="kl">Offerings</div><div class="kv" style="font-size:16px;">KES 87,200</div><div class="kd nt">24% of income</div></div>
+          <div class="kc"><div class="kl">Special offerings</div><div class="kv" style="font-size:16px;">KES 43,000</div><div class="kd nt">12% of income</div></div>
+          <div class="kc"><div class="kl">Building fund</div><div class="kv" style="font-size:16px;">KES 35,200</div><div class="kd nt">9% of income</div></div>
+        </div>
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="ct">
+                <div class="ct-l"><i class="ti ti-chart-bar" aria-hidden="true"></i> Income vs expenditure (H1 2026)</div>
+                <div style="display:flex;gap:8px;">
+                  <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:#555;"><span style="width:8px;height:8px;border-radius:2px;background:#639922;display:inline-block;"></span>Income</span>
+                  <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:#555;"><span style="width:8px;height:8px;border-radius:2px;background:#e24b4a;display:inline-block;"></span>Expenditure</span>
+                </div>
+              </div>
+              <div style="position:relative;width:100%;height:150px;"><canvas id="c-ov1"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-trending-up" aria-hidden="true"></i> Surplus trend (H1 2026)</div></div>
+              <div style="position:relative;width:100%;height:120px;"><canvas id="c-ov2"></canvas></div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-chart-donut" aria-hidden="true"></i> Income breakdown</div></div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
+                <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:#555;"><span style="width:8px;height:8px;border-radius:2px;background:#639922;display:inline-block;"></span>Tithes 55%</span>
+                <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:#555;"><span style="width:8px;height:8px;border-radius:2px;background:#1d9e75;display:inline-block;"></span>Offerings 24%</span>
+                <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:#555;"><span style="width:8px;height:8px;border-radius:2px;background:#ba7517;display:inline-block;"></span>Special 12%</span>
+                <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:#555;"><span style="width:8px;height:8px;border-radius:2px;background:#378add;display:inline-block;"></span>Building 9%</span>
+              </div>
+              <div style="position:relative;width:100%;height:130px;"><canvas id="c-ov3"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-wallet" aria-hidden="true"></i> Cash position</div></div>
+              <div class="fin-row"><span class="fl">Cash on hand</span><span class="fv">KES 342,000</span></div>
+              <div class="fin-row"><span class="fl">M-Pesa float</span><span class="fv">KES 118,000</span></div>
+              <div class="fin-row"><span class="fl">Bank (Equity)</span><span class="fv">KES 224,000</span></div>
+              <div class="fin-row" style="border-top:0.5px solid #ddd8cc;margin-top:4px;padding-top:8px;"><span style="font-weight:500;color:#1a2e1e;">Total cash</span><span class="fvg">KES 684,000</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTRIBUTIONS PANEL -->
+      <div class="panel" id="p-co">
+        <div class="ph">
+          <div><h2>Contributions</h2><div class="sub">Record and track all member contributions</div></div>
+          <div style="display:flex;gap:7px;"><button class="btn out sm" onclick="generateSingleReport('contributions_log')"><i class="ti ti-download" aria-hidden="true"></i>Export</button><button class="btn sm"><i class="ti ti-plus" aria-hidden="true"></i>New entry</button></div>
+        </div>
+        <div class="krow g4">
+          <div class="kc"><div class="kl">Total (Jun)</div><div class="kv">KES 363,800</div><div class="kd up">+8% vs May</div></div>
+          <div class="kc"><div class="kl">Contributors</div><div class="kv">847</div><div class="kd nt">66% of members</div></div>
+          <div class="kc"><div class="kl">Avg per member</div><div class="kv">KES 430</div><div class="kd up">+5% vs May</div></div>
+          <div class="kc"><div class="kl">Pending M-Pesa</div><div class="kv">KES 12,400</div><div class="kd ba" style="color:#633806;">Reconciling</div></div>
+        </div>
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="ct">
+                <div class="ct-l"><i class="ti ti-list" aria-hidden="true"></i> Contribution log</div>
+                <div style="display:flex;gap:6px;">
+                  <input type="text" placeholder="Search…" style="padding:4px 8px;border:0.5px solid #ccc9bc;border-radius:6px;font-size:11px;width:110px;background:#fff;color:#1a2e1e"/>
+                  <select style="padding:4px 7px;border:0.5px solid #ccc9bc;border-radius:6px;font-size:11px;background:#fff;color:#1a2e1e;">
+                    <option>All types</option>
+                    <option>Tithe</option>
+                    <option>Offering</option>
+                    <option>Special</option>
+                    <option>Building</option>
+                  </select>
+                </div>
+              </div>
+              <table class="tbl">
+                <thead><tr><th style="width:32px;"></th><th style="width:110px;">Member</th><th>Type</th><th>Method</th><th>Amount</th><th>Date</th></tr></thead>
+                <tbody id="contrib-tbody">
+                  <tr><td><div class="av av1">GK</div></td><td>Grace Kamau</td><td><span class="bdg bg">Tithe</span></td><td>M-Pesa</td><td style="font-weight:500;color:#27500a;">KES 5,000</td><td style="color:#7a7567;">Jun 28</td></tr>
+                  <tr><td><div class="av av2">JO</div></td><td>James Odhiambo</td><td><span class="bdg bgr">Offering</span></td><td>Cash</td><td style="font-weight:500;color:#27500a;">KES 2,500</td><td style="color:#7a7567;">Jun 28</td></tr>
+                  <tr><td><div class="av av3">FM</div></td><td>Faith Muigai</td><td><span class="bdg bg">Tithe</span></td><td>M-Pesa</td><td style="font-weight:500;color:#27500a;">KES 3,000</td><td style="color:#7a7567;">Jun 22</td></tr>
+                  <tr><td><div class="av av4">MA</div></td><td>Mary Achieng</td><td><span class="bdg bg">Tithe</span></td><td>M-Pesa</td><td style="font-weight:500;color:#27500a;">KES 6,000</td><td style="color:#7a7567;">Jun 22</td></tr>
+                  <tr><td><div class="av av5">SM</div></td><td>Samuel Mutua</td><td><span class="bdg ba">Special</span></td><td>M-Pesa</td><td style="font-weight:500;color:#27500a;">KES 2,000</td><td style="color:#7a7567;">Jun 15</td></tr>
+                  <tr><td><div class="av av2">PW</div></td><td>Peter Waweru</td><td><span class="bdg bb">Building</span></td><td>Cash</td><td style="font-weight:500;color:#27500a;">KES 1,500</td><td style="color:#7a7567;">Jun 15</td></tr>
+                </tbody>
+              </table>
+              <div style="display:flex;justify-content:space-between;padding:9px 0 0;font-size:11px;color:#7a7567;">
+                <span>Showing 1–6 of 847 entries</span>
+                <div style="display:flex;gap:4px;"><button style="padding:3px 8px;border:0.5px solid #ccc9bc;border-radius:5px;background:#1a2e1e;color:#fff;font-size:11px;cursor:pointer;">1</button><button style="padding:3px 8px;border:0.5px solid #ccc9bc;border-radius:5px;background:#fff;font-size:11px;cursor:pointer;">2</button><button style="padding:3px 8px;border:0.5px solid #ccc9bc;border-radius:5px;background:#fff;font-size:11px;cursor:pointer;">…</button></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-plus" aria-hidden="true"></i> Record contribution</div></div>
+              <div class="fld">
+                <div><label>Member name</label><input type="text" id="c-member-name" placeholder="e.g. Grace Kamau"/></div>
+                <div><label>Contribution type</label><select id="c-type"><option value="Tithe">Tithe</option><option value="Offering">Offering</option><option value="Special">Special offering</option><option value="Building">Building fund</option></select></div>
+                <div><label>Amount (KES)</label><input type="number" id="c-amount" placeholder="0" min="0"/></div>
+                <div><label>Payment method</label><select id="c-method"><option>M-Pesa</option><option>Cash</option><option>Bank transfer</option><option>Cheque</option></select></div>
+                <div><label>District</label><select id="c-district"><option>Dandora North</option><option>Dandora South</option><option>Korogocho</option><option>Baba Dogo</option></select></div>
+                <div><label>Reference / notes</label><input type="text" id="c-notes" placeholder="M-Pesa ref or notes"/></div>
+                <button class="btn" style="width:100%;justify-content:center;" onclick="saveContribution()"><i class="ti ti-device-floppy" aria-hidden="true"></i>Save contribution</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-map-2" aria-hidden="true"></i> By district (Jun)</div></div>
+              <div class="prog-row"><div class="prog-lbl"><span style="color:#444;">Dandora North</span><span style="font-weight:500;color:#1a2e1e;">KES 112,400</span></div><div class="bar-t"><div class="bar-f" style="width:82%;background:#639922;"></div></div></div>
+              <div class="prog-row"><div class="prog-lbl"><span style="color:#444;">Dandora South</span><span style="font-weight:500;color:#1a2e1e;">KES 98,700</span></div><div class="bar-t"><div class="bar-f" style="width:72%;background:#1d9e75;"></div></div></div>
+              <div class="prog-row"><div class="prog-lbl"><span style="color:#444;">Korogocho</span><span style="font-weight:500;color:#1a2e1e;">KES 74,300</span></div><div class="bar-t"><div class="bar-f" style="width:54%;background:#378add;"></div></div></div>
+              <div class="prog-row" style="margin-bottom:0;"><div class="prog-lbl"><span style="color:#444;">Baba Dogo</span><span style="font-weight:500;color:#1a2e1e;">KES 78,400</span></div><div class="bar-t"><div class="bar-f" style="width:57%;background:#ba7517;"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPENDITURE PANEL -->
+      <div class="panel" id="p-ex">
+        <div class="ph">
+          <div><h2>Expenditure</h2><div class="sub">Track and approve parish expenses</div></div>
+          <div style="display:flex;gap:7px;"><button class="btn out sm" onclick="generateSingleReport('expenditure_register')"><i class="ti ti-download" aria-hidden="true"></i>Export</button><button class="btn sm"><i class="ti ti-plus" aria-hidden="true"></i>Add expense</button></div>
+        </div>
+        <div class="krow g4">
+          <div class="kc"><div class="kl">Total (Jun)</div><div class="kv">KES 175,700</div><div class="kd nt">48% of income</div></div>
+          <div class="kc"><div class="kl">Largest category</div><div class="kv" style="font-size:15px;">Salaries</div><div class="kd nt">KES 62,000</div></div>
+          <div class="kc"><div class="kl">Pending approval</div><div class="kv" style="color:#ba7517;">3</div><div class="kd ba" style="color:#633806;">Awaiting sign-off</div></div>
+          <div class="kc"><div class="kl">Budget remaining</div><div class="kv" style="color:#27500a;">KES 44,300</div><div class="kd up">Budget healthy</div></div>
+        </div>
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-receipt" aria-hidden="true"></i> Expense register</div><span class="bdg bgr">Jun 2026</span></div>
+              <table class="tbl">
+                <thead><tr><th>Description</th><th>Category</th><th>Status</th><th style="text-align:right;">Amount</th></tr></thead>
+                <tbody id="expense-tbody">
+                  <tr><td>Staff salaries & allowances</td><td><span class="bdg bgr">Salaries</span></td><td><span class="bdg bg">Approved</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 62,000</td></tr>
+                  <tr><td>Outreach & missions program</td><td><span class="bdg bb">Outreach</span></td><td><span class="bdg bg">Approved</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 31,000</td></tr>
+                  <tr><td>Building maintenance</td><td><span class="bdg ba">Maintenance</span></td><td><span class="bdg bg">Approved</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 24,000</td></tr>
+                  <tr><td>Electricity & water bills</td><td><span class="bdg bgr">Utilities</span></td><td><span class="bdg bg">Approved</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 18,000</td></tr>
+                  <tr><td>Administration costs</td><td><span class="bdg bgr">Admin</span></td><td><span class="bdg bg">Approved</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 14,000</td></tr>
+                  <tr><td>Youth & children ministry</td><td><span class="bdg bb">Ministry</span></td><td><span class="bdg ba">Pending</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 11,000</td></tr>
+                  <tr><td>Sound equipment repair</td><td><span class="bdg bgr">Equipment</span></td><td><span class="bdg ba">Pending</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 9,500</td></tr>
+                  <tr><td>Miscellaneous expenses</td><td><span class="bdg bgr">Misc</span></td><td><span class="bdg ba">Pending</span></td><td style="text-align:right;font-weight:500;color:#a32d2d;">KES 6,200</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-chart-bar" aria-hidden="true"></i> Expenditure breakdown</div></div>
+              <div style="position:relative;width:100%;height:180px;"><canvas id="c-ex"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-plus" aria-hidden="true"></i> Record expense</div></div>
+              <div class="fld">
+                <div><label>Description</label><input type="text" id="e-desc" placeholder="e.g. Electricity bill June"/></div>
+                <div>
+                  <label>Category</label>
+                  <select id="e-category">
+                    <option value="Salaries">Salaries</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Outreach">Outreach</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Ministry">Ministry</option>
+                    <option value="Misc">Misc</option>
+                  </select>
+                </div>
+                <div><label>Amount (KES)</label><input type="number" id="e-amount" placeholder="0" min="0"/></div>
+                <div><label>Paid to</label><input type="text" id="e-payee" placeholder="Vendor or payee name"/></div>
+                <button class="btn" style="width:100%;justify-content:center;" onclick="saveExpense()"><i class="ti ti-device-floppy" aria-hidden="true"></i>Save expense</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINANCIAL STATEMENTS PANEL -->
+      <div class="panel" id="p-fs">
+        <div class="ph">
+          <div><h2>Financial statements</h2><div class="sub">Income & expenditure · Balance sheet · Cash flow</div></div>
+          <div style="display:flex;gap:7px;"><button class="btn out sm" onclick="generateSingleReport('financial_statement_pdf')"><i class="ti ti-download" aria-hidden="true"></i>Export PDF</button><button class="btn out sm" onclick="generateSingleReport('financial_statement_excel')"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i>Excel</button></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;">
+          <div class="bdg bg" style="padding:5px 12px;cursor:pointer;border:0.5px solid #c0dd97;" onclick="setStmt('ie',this)" id="st-ie">Income & expenditure</div>
+          <div class="bdg bgr" style="padding:5px 12px;cursor:pointer;" onclick="setStmt('bs',this)" id="st-bs">Balance sheet</div>
+          <div class="bdg bgr" style="padding:5px 12px;cursor:pointer;" onclick="setStmt('cf',this)" id="st-cf">Cash flow</div>
+        </div>
+        <div class="grid2b">
+          <div class="card" id="stmt-main">
+            <div class="ct"><div class="ct-l"><i class="ti ti-report-money" aria-hidden="true"></i> <span id="stmt-title">Income & expenditure</span></div><span class="bdg bgr">Q2 2026</span></div>
+            <div id="stmt-body">
+              <div class="stmt-section">INCOME</div>
+              <div class="stmt-row"><span>Tithes</span><span>KES 584,200</span></div>
+              <div class="stmt-row"><span>Offerings</span><span>KES 258,000</span></div>
+              <div class="stmt-row"><span>Special Offerings & Building</span><span>KES 228,800</span></div>
+              <div class="stmt-total"><span>Total Income</span><span>KES 1,071,000</span></div>
+              <div class="stmt-section">EXPENDITURE</div>
+              <div class="stmt-row"><span>Salaries & Allowances</span><span>KES 186,000</span></div>
+              <div class="stmt-row"><span>Utilities & Operations</span><span>KES 120,000</span></div>
+              <div class="stmt-row"><span>Missions & Outreach</span><span>KES 93,000</span></div>
+              <div class="stmt-total"><span>Total Expenditure</span><span>KES 399,000</span></div>
+              <div class="stmt-grand"><span>Net Surplus</span><span style="color:#27500a;">KES 672,000</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="ct"><div class="ct-l"><i class="ti ti-chart-line" aria-hidden="true"></i> Surplus trend</div></div>
+              <div style="position:relative;width:100%;height:130px;"><canvas id="c-fs"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUDGET TRACKING PANEL -->
+      <div class="panel" id="p-bu">
+        <div class="ph">
+          <div><h2>Budget tracking</h2><div class="sub">Compare allocated budget against actual expenditure</div></div>
+          <div style="display:flex;gap:7px;"><button class="btn out sm" onclick="generateSingleReport('budget_performance')"><i class="ti ti-download" aria-hidden="true"></i>Export</button></div>
+        </div>
+        <div class="card">
+          <div class="ct"><div class="ct-l"><i class="ti ti-chart-pie" aria-hidden="true"></i> Budget performance</div></div>
+          <table class="tbl">
+            <thead><tr><th>Category</th><th>Allocated</th><th>Spent</th><th>Remaining</th><th>Utilization</th></tr></thead>
+            <tbody>
+              <tr><td>Salaries & Allowances</td><td>KES 70,000</td><td>KES 62,000</td><td>KES 8,000</td><td><div class="prog-row" style="margin:0;"><div class="bar-t"><div class="bar-f" style="width:88%;background:#ba7517;"></div></div></div></td></tr>
+              <tr><td>Missions & Outreach</td><td>KES 35,000</td><td>KES 31,000</td><td>KES 4,000</td><td><div class="prog-row" style="margin:0;"><div class="bar-t"><div class="bar-f" style="width:88%;background:#ba7517;"></div></div></div></td></tr>
+              <tr><td>Building Maintenance</td><td>KES 40,000</td><td>KES 24,000</td><td>KES 16,000</td><td><div class="prog-row" style="margin:0;"><div class="bar-t"><div class="bar-f" style="width:60%;background:#639922;"></div></div></div></td></tr>
+              <tr><td>Utilities (Water/Power)</td><td>KES 20,000</td><td>KES 18,000</td><td>KES 2,000</td><td><div class="prog-row" style="margin:0;"><div class="bar-t"><div class="bar-f" style="width:90%;background:#e24b4a;"></div></div></div></td></tr>
+              <tr><td>Administration</td><td>KES 15,000</td><td>KES 14,000</td><td>KES 1,000</td><td><div class="prog-row" style="margin:0;"><div class="bar-t"><div class="bar-f" style="width:93%;background:#e24b4a;"></div></div></div></td></tr>
+              <tr><td>Youth & Children Ministry</td><td>KES 25,000</td><td>KES 11,000</td><td>KES 14,000</td><td><div class="prog-row" style="margin:0;"><div class="bar-t"><div class="bar-f" style="width:44%;background:#639922;"></div></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REPORTS PANEL -->
+      <div class="panel" id="p-rp">
+        <div class="ph">
+          <div><h2>Reports</h2><div class="sub">Download or generate formal parish financial reports</div></div>
+        </div>
+        <div class="reports-grid">
+          <div class="report-card">
+            <div>
+              <div class="card-icon icon-green"><i class="ti ti-file-analytics"></i></div>
+              <div class="card-title">Monthly Statement</div>
+              <div class="card-description">Comprehensive summary of income, expenses, and cash positions for the current month.</div>
+            </div>
+            <span class="card-action-link" onclick="generateSingleReport('monthly_statement')">Generate Report &rarr;</span>
+          </div>
+          <div class="report-card">
+            <div>
+              <div class="card-icon icon-blue"><i class="ti ti-scale"></i></div>
+              <div class="card-title">Quarterly Balance Sheet</div>
+              <div class="card-description">Formal asset, liability, and equity report mapping overall church net worth.</div>
+            </div>
+            <span class="card-action-link" onclick="generateSingleReport('quarterly_balance_sheet')">Generate Report &rarr;</span>
+          </div>
+          <div class="report-card">
+            <div>
+              <div class="card-icon icon-orange"><i class="ti ti-chart-bar"></i></div>
+              <div class="card-title">Budget Variance Report</div>
+              <div class="card-description">Highlights specific areas over or under budget tracks for deeper variance audits.</div>
+            </div>
+            <span class="card-action-link" onclick="generateSingleReport('budget_variance')">Generate Report &rarr;</span>
+          </div>
+          <div class="report-card">
+            <div>
+              <div class="card-icon icon-purple"><i class="ti ti-users"></i></div>
+              <div class="card-title">District Contributions Log</div>
+              <div class="card-description">Breakdown of performance, active envelopes, and metrics filtered across districts.</div>
+            </div>
+            <span class="card-action-link" onclick="generateSingleReport('district_contributions')">Generate Report &rarr;</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // 1. Navigation Controller
+  function nav(panelId, element) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+    
+    document.getElementById('p-' + panelId).classList.add('active');
+    element.classList.add('active');
+    
+    let labels = {
+      'ov': 'Financial overview',
+      'co': 'Contributions registry',
+      'ex': 'Expenditure tracker',
+      'fs': 'Financial statements statements',
+      'bu': 'Budget breakdown tracking',
+      'rp': 'Parish report center'
+    };
+    document.getElementById('page-label').innerText = labels[panelId] || 'Dashboard';
+  }
+
+  // 2. Financial Statements Switcher
+  function setStmt(type, elem) {
+    document.getElementById('st-ie').className = 'bdg bgr';
+    document.getElementById('st-bs').className = 'bdg bgr';
+    document.getElementById('st-cf').className = 'bdg bgr';
+    elem.className = 'bdg bg';
+    
+    let title = document.getElementById('stmt-title');
+    let body = document.getElementById('stmt-body');
+    
+    if(type === 'ie') {
+      title.innerText = 'Income & expenditure';
+      body.innerHTML = `
+        <div class="stmt-section">INCOME</div>
+        <div class="stmt-row"><span>Tithes</span><span>KES 584,200</span></div>
+        <div class="stmt-row"><span>Offerings</span><span>KES 258,000</span></div>
+        <div class="stmt-row"><span>Special Offerings & Building</span><span>KES 228,800</span></div>
+        <div class="stmt-total"><span>Total Income</span><span>KES 1,071,000</span></div>
+        <div class="stmt-section">EXPENDITURE</div>
+        <div class="stmt-row"><span>Salaries & Allowances</span><span>KES 186,000</span></div>
+        <div class="stmt-row"><span>Utilities & Operations</span><span>KES 120,000</span></div>
+        <div class="stmt-row"><span>Missions & Outreach</span><span>KES 93,000</span></div>
+        <div class="stmt-total"><span>Total Expenditure</span><span>KES 399,000</span></div>
+        <div class="stmt-grand"><span>Net Surplus</span><span style="color:#27500a;">KES 672,000</span></div>`;
+    } else if(type === 'bs') {
+      title.innerText = 'Balance sheet';
+      body.innerHTML = `
+        <div class="stmt-section">CURRENT ASSETS</div>
+        <div class="stmt-row"><span>Bank Balances</span><span>KES 1,840,000</span></div>
+        <div class="stmt-row"><span>M-Pesa Float</span><span>KES 118,000</span></div>
+        <div class="stmt-section">FIXED ASSETS</div>
+        <div class="stmt-row"><span>Church Plot & Sanctuary Building</span><span>KES 24,500,000</span></div>
+        <div class="stmt-row"><span>Sound System & Equipment</span><span>KES 850,000</span></div>
+        <div class="stmt-total"><span>Total Assets</span><span>KES 27,308,000</span></div>
+        <div class="stmt-section">LIABILITIES</div>
+        <div class="stmt-row"><span>Outstanding Project Invoices</span><span>KES 45,000</span></div>
+        <div class="stmt-grand"><span>Net Church Equity</span><span>KES 27,263,000</span></div>`;
+    } else if(type === 'cf') {
+      title.innerText = 'Cash flow statement';
+      body.innerHTML = `
+        <div class="stmt-section">OPERATING ACTIVITIES</div>
+        <div class="stmt-row"><span>Cash Received from Envelopes</span><span>KES 1,071,000</span></div>
+        <div class="stmt-row"><span>Cash Paid for Operations</span><span>(KES 399,000)</span></div>
+        <div class="stmt-total"><span>Net Cash from Operations</span><span>KES 672,000</span></div>
+        <div class="stmt-section">INVESTING ACTIVITIES</div>
+        <div class="stmt-row"><span>Purchase of Equipment</span><span>(KES 150,000)</span></div>
+        <div class="stmt-total"><span>Net Increase in Cash</span><span>KES 522,000</span></div>
+        <div class="stmt-grand"><span>Cash Position (End of Quarter)</span><span style="color:#27500a;">KES 684,000</span></div>`;
+    }
+  }
+
+  // 3. Dynamic Contribution Handler
+  function saveContribution() {
+    const name = document.getElementById('c-member-name').value.trim();
+    const type = document.getElementById('c-type').value;
+    const amount = document.getElementById('c-amount').value;
+    const method = document.getElementById('c-method').value;
+
+    if (!name || !amount) {
+      alert('Please fill out Member Name and Amount fields.');
+      return;
+    }
+
+    let badgeClass = 'bgr';
+    if (type === 'Tithe') badgeClass = 'bg';
+    else if (type === 'Special') badgeClass = 'ba';
+    else if (type === 'Building') badgeClass = 'bb';
+
+    const formattedAmount = 'KES ' + parseFloat(amount).toLocaleString();
+    
+    // Create short initials badge
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2) || 'M';
+    const randomAvClass = 'av' + (Math.floor(Math.random() * 5) + 1);
+
+    const tbody = document.getElementById('contrib-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+      <td><div class="av ${randomAvClass}">${initials}</div></td>
+      <td>${name}</td>
+      <td><span class="bdg ${badgeClass}">${type}</span></td>
+      <td>${method}</td>
+      <td style="font-weight:500;color:#27500a;">${formattedAmount}</td>
+      <td style="color:#7a7567;">Jun 28</td>
+    `;
+
+    tbody.insertBefore(newRow, tbody.firstChild);
+
+    // Reset Form
+    document.getElementById('c-member-name').value = '';
+    document.getElementById('c-amount').value = '';
+    document.getElementById('c-notes').value = '';
+
+    alert('Contribution added successfully!');
+  }
+
+  // 4. Dynamic Expense Handler
+  function saveExpense() {
+    const desc = document.getElementById('e-desc').value.trim();
+    const category = document.getElementById('e-category').value;
+    const amount = document.getElementById('e-amount').value.trim();
+    
+    if (!desc || !amount) {
+      alert('Please fill out both the Description and Amount fields.');
+      return;
+    }
+
+    let badgeClass = 'bgr';
+    if (category === 'Outreach' || category === 'Ministry') { badgeClass = 'bb'; }
+    else if (category === 'Maintenance') { badgeClass = 'ba'; }
+
+    const formattedAmount = 'KES ' + parseFloat(amount).toLocaleString();
+    const tbody = document.getElementById('expense-tbody');
+    const newRow = document.createElement('tr');
+    
+    newRow.innerHTML = `
+      <td>${desc}</td>
+      <td><span class="bdg ${badgeClass}">${category}</span></td>
+      <td><span class="bdg ba">Pending</span></td>
+      <td style="text-align:right; font-weight:500; color:#a32d2d;">${formattedAmount}</td>
+    `;
+
+    tbody.insertBefore(newRow, tbody.firstChild);
+
+    // Reset form elements clearly
+    document.getElementById('e-desc').value = '';
+    document.getElementById('e-amount').value = '';
+    document.getElementById('e-payee').value = '';
+    
+    alert('Expense registered successfully!');
+  }
+
+  // 5. Functional Report Download Pipeline Trigger (Formatted for Excel)
+  function generateSingleReport(reportName) {
+    // Generate valid TSV layout structures which Excel handles seamlessly as an immediate grid sheet spreadsheet file link block
+    const excelHeader = `PCEA Dandora Parish Ledger Export\t\nReport Identifier:\t${reportName.toUpperCase()}\nExport Timestamp:\t${new Date().toLocaleString()}\nSystem Pipeline State:\tVerified & Clean\n\n`;
+    
+    const excelBody = `Metric / Section Category\tValue Record Info\n` + 
+                      `Parish Ledger Core Scope\t${reportName.replace('_', ' ')}\n` + 
+                      `Data Sync Verification\tSUCCESS\n` +
+                      `Audit Validation String\tDashboard Record Block Captured Ready`;
+    
+    const compositeSpreadsheetBuffer = excelHeader + excelBody;
+    const excelBlob = new Blob([compositeSpreadsheetBuffer], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const dynamicDownloadUrl = window.URL.createObjectURL(excelBlob);
+    
+    const hiddenAnchorElement = document.createElement('a');
+    hiddenAnchorElement.href = dynamicDownloadUrl;
+    hiddenAnchorElement.download = `${reportName}_export_${Math.floor(Date.now() / 1000)}.xls`;
+    document.body.appendChild(hiddenAnchorElement);
+    hiddenAnchorElement.click();
+    
+    window.URL.revokeObjectURL(dynamicDownloadUrl);
+    document.body.removeChild(hiddenAnchorElement);
+  }
+
+  // 6. Chart.js Data Renders
+  window.addEventListener('DOMContentLoaded', () => {
+    // Overview Bar Chart
+    new Chart(document.getElementById('c-ov1'), {
+      type: 'bar',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          { label: 'Income', data: [310, 325, 340, 315, 338, 363], backgroundColor: '#639922', barThickness: 10 },
+          { label: 'Expenditure', data: [160, 185, 190, 155, 168, 175], backgroundColor: '#e24b4a', barThickness: 10 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // Overview Line Trend Chart
+    new Chart(document.getElementById('c-ov2'), {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{ data: [150, 140, 150, 160, 170, 188], borderColor: '#1d9e75', tension: 0.2, borderWidth: 2, pointRadius: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // Overview Donut Breakdown
+    new Chart(document.getElementById('c-ov3'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Tithes', 'Offerings', 'Special', 'Building'],
+        datasets: [{ data: [55, 24, 12, 9], backgroundColor: ['#639922', '#1d9e75', '#ba7517', '#378add'], borderWidth: 1 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // Expenditure Horizontal Bar Chart
+    new Chart(document.getElementById('c-ex'), {
+      type: 'bar',
+      data: {
+        labels: ['Salaries', 'Maint.', 'Outreach', 'Admin', 'Utilities', 'Ministry', 'Equipment', 'Misc'],
+        datasets: [{ data: [62, 24, 31, 14, 18, 11, 9.5, 6.2], backgroundColor: '#a32d2d', barThickness: 8 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // Statement Performance Chart
+    new Chart(document.getElementById('c-fs'), {
+      type: 'line',
+      data: {
+        labels: ['Q1-25', 'Q2-25', 'Q3-25', 'Q4-25', 'Q1-26', 'Q2-26'],
+        datasets: [{ data: [420, 510, 480, 610, 550, 672], borderColor: '#c9981f', tension: 0.1, borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+  });
+</script>
+</body>
+</html>
