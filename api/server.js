@@ -17,15 +17,24 @@ const sessionRoutes = require('../backend/routes/sessionRoutes');
 app.use(cors());
 app.use(express.json());
 
-// Serve frontend assets out of static middleware
-// __dirname is PCEA_DANDORA_CMS/api, so '../frontend' goes to PCEA_DANDORA_CMS/frontend
-app.use('/frontend', express.static(path.join(__dirname, '../frontend')));
+// Serve frontend assets out of static middleware using root directory pathing
+app.use('/frontend', express.static(path.join(process.cwd(), 'frontend')));
 
 // PRIMARY NAVIGATION VIEWS
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/login.html'), (err) => {
+    // Look for frontend from the project root instead of __dirname
+    res.sendFile(path.join(process.cwd(), 'frontend/login.html'), (err) => {
         if (err) {
             res.status(500).send("Critical Error: Core login interface could not be compiled.");
+        }
+    });
+});
+
+app.get('/dashboard', (req, res) => {
+    // Look for frontend from the project root instead of __dirname
+    res.sendFile(path.join(process.cwd(), 'frontend/dashboard.html'), (err) => {
+        if (err) {
+            res.status(500).send("Critical Error: Dashboard interface asset trace missing.");
         }
     });
 });
