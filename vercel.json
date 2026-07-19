@@ -1,15 +1,12 @@
 {
+  "functions": {
+    "api/server.js": {
+      "includeFiles": "frontend/**"
+    }
+  },
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/frontend/login.html"
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/frontend/dashboard.html"
-    },
-    {
-      "source": "/api/(.*)",
+      "source": "/(.*)",
       "destination": "/api/server.js"
     }
   ]

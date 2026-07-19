@@ -17,20 +17,30 @@ const sessionRoutes = require('../backend/routes/sessionRoutes');
 app.use(cors());
 app.use(express.json());
 
-// Serve frontend assets out of static middleware (kept for CSS/JS assets inside the folder)
-app.use('/frontend', express.static(path.join(process.cwd(), 'frontend')));
-
-// SYSTEM API ENDPOINTS
-app.use('/api/auth', authRoutes);
-app.use('/api/sms', smsRoutes);
-app.use('/api/session', sessionRoutes);
+// Serve frontend assets out of static middleware
+app.use('/frontend', express.static(path.join(__dirname, '../frontend')));
 
 // PRIMARY NAVIGATION VIEWS
 app.get('/', (req, res) => {
-    // Look for frontend from the project root instead of __dirname
-    res.sendFile(path.join(process.cwd(), 'frontend/login.html'), (err) => {
+    res.sendFile(path.join(__dirname, '../frontend/login.html'), (err) => {
         if (err) {
-            res.status(500).send("Critical Error: Core login interface could not be compiled.");
+            res.status(500).send({
+                message: "Critical Error: Core login interface trace missing.",
+                error: err.message,
+                evaluatedPath: path.join(__dirname, '../frontend/login.html')
+            });
+        }
+    });
+});
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dashboard.html'), (err) => {
+        if (err) {
+            res.status(500).send({
+                message: "Critical Error: Dashboard interface trace missing.",
+                error: err.message,
+                evaluatedPath: path.join(__dirname, '../frontend/dashboard.html')
+            });
         }
     });
 });
