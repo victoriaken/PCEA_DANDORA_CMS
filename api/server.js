@@ -30,11 +30,17 @@ app.get('/', (req, res) => {
     });
 });
 
-app.get('/dashboard', (req, res) => {
-    // Look for frontend from the project root instead of __dirname
-    res.sendFile(path.join(process.cwd(), 'frontend/dashboard.html'), (err) => {
+app.get('/', (req, res) => {
+    // Try using __dirname pathing but let's see the actual error object if it fails
+    res.sendFile(path.join(__dirname, '../frontend/login.html'), (err) => {
         if (err) {
-            res.status(500).send("Critical Error: Dashboard interface asset trace missing.");
+            // This will print the actual error code, path attempted, and status
+            res.status(500).send({
+                message: "Path verification failed",
+                error: err.message,
+                resolvedPath: path.join(__dirname, '../frontend/login.html'),
+                cwd: process.cwd()
+            });
         }
     });
 });
