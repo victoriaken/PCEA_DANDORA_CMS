@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/server.js": {
+      "includeFiles": "frontend/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
