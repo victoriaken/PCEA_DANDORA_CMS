@@ -17,8 +17,13 @@ const sessionRoutes = require('../backend/routes/sessionRoutes');
 app.use(cors());
 app.use(express.json());
 
-// Serve frontend assets out of static middleware using root directory pathing
+// Serve frontend assets out of static middleware (kept for CSS/JS assets inside the folder)
 app.use('/frontend', express.static(path.join(process.cwd(), 'frontend')));
+
+// SYSTEM API ENDPOINTS
+app.use('/api/auth', authRoutes);
+app.use('/api/sms', smsRoutes);
+app.use('/api/session', sessionRoutes);
 
 // PRIMARY NAVIGATION VIEWS
 app.get('/', (req, res) => {
