@@ -8,31 +8,27 @@ const app = express();
 // Establish and verify database connection pool on startup
 require('./db');
 
-// Import Route Handlers (Point them inside the backend folder)
-const authRoutes = require('./backend/routes/authRoutes');
-const smsRoutes = require('./backend/routes/smsRoutes');
-const sessionRoutes = require('./backend/routes/sessionRoutes');
+// Import Route Handlers (Go up one level, then into backend)
+const authRoutes = require('../backend/routes/authRoutes');
+const smsRoutes = require('../backend/routes/smsRoutes');
+const sessionRoutes = require('../backend/routes/sessionRoutes');
 
 // Establish database connection pool
-require('./backend/db');
-
-// ==========================================
-// MIDDLEWARE CONFIGURATION
-// ==========================================
-app.use(cors()); // Safe cross-origin resource sharing for frontend requests
-app.use(express.json()); // Essential body parsing for incoming JSON payloads
+require('../backend/db'); 
 
 // Serve frontend assets cleanly out of static middleware
-app.use('/frontend', express.static(path.join(__dirname, './frontend')));
+app.use('/frontend', express.static(path.join(__dirname, '../frontend')));
 
-// ==========================================
 // PRIMARY NAVIGATION VIEWS
-// ==========================================
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, './frontend/login.html'), (err) => {
-        if (err) {
-            res.status(500).send("Critical Error: Core login interface could not be compiled.");
-        }
+    res.sendFile(path.join(__dirname, '../frontend/login.html'), (err) => {
+        if (err) res.status(500).send("Critical Error: Core login interface could not be compiled.");
+    });
+});
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dashboard.html'), (err) => {
+        if (err) res.status(500).send("Critical Error: Dashboard interface asset trace missing.");
     });
 });
 
