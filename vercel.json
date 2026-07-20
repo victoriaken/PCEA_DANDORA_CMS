@@ -1,13 +1,10 @@
 {
   "functions": {
-    "api/server.js": {
-      "includeFiles": "../frontend/**"
+    "api/*.js": {
+      "includeFiles": "frontend/**"
+    },
+    "api/**/*.js": {
+      "includeFiles": "frontend/**"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/server.js"
-    }
-  ]
+  }
 }

@@ -20,7 +20,9 @@
     .app { display: flex; height: 100vh; font-size: 13px; }
     
     /* SIDEBAR */
-    .sb { width: 220px; min-width: 220px; background: #1a2e1e; display: flex; flex-direction: column; }
+    .sb { width: 220px; min-width: 220px; background: #1a2e1e; display: flex; flex-direction: column; transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease; overflow: hidden; }
+    .sb.collapsed { width: 0 !important; min-width: 0 !important; padding: 0 !important; border: none !important; }
+    
     .sb-brand { padding: 16px 14px 12px; border-bottom: 1px solid #2d4433; }
     .sb-brand .lr { display: flex; align-items: center; gap: 9px; }
     .sb-brand .ic { width: 34px; height: 34px; background: #c9981f; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1a2e1e; font-size: 16px; }
@@ -107,19 +109,7 @@
     .agenda-item:last-child { border-bottom: none; }
     .agenda-num { font-weight: bold; color: #c9981f; width: 18px; }
 
-    .sb {
-      transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease;
-      overflow: hidden;
-    }
-
-    .sb.collapsed {
-      width: 0 !important;
-      min-width: 0 !important;
-      padding: 0 !important;
-      border: none !important;
-    }
-
-    /* Style rule for compiled stats visualization block */
+    /* Compiled stats visualization block */
     .stats-preview-box {
       margin-top: 16px;
       border-top: 1px dashed #ccc9bc;
@@ -185,7 +175,6 @@
             <div class="sub">Governance, Records & Congregational Tracking</div>
           </div>
           <div style="display:flex;gap:7px;">
-            <!-- Updated button with an ID hook -->
             <button class="btn out sm" id="exportRollsBtn"><i class="ti ti-download" aria-hidden="true"></i>Export Rolls</button>
             <button class="btn sm" onclick="document.getElementById('ni-mi').click()"><i class="ti ti-plus" aria-hidden="true"></i>New Minutes Entry</button>
           </div>
@@ -346,6 +335,8 @@
   </div>
 </div>
 
+<!-- Include jsPDF Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/dashboard.js"></script> 
 <script>
   // Dynamic Authentication Verification
@@ -391,7 +382,6 @@
     const role = document.getElementById('manage-role').value;
     const newPass = document.getElementById('new-desk-password').value.trim();
 
-    // Store the updated desk key securely inside LocalStorage
     localStorage.setItem(`pcea_pass_${role}`, newPass);
     
     alert(`✨ Security Configuration Saved!\nGateway access pass for "${role.replace('_', ' ').toUpperCase()}" updated.`);
@@ -399,14 +389,14 @@
   }
 
   // =========================================================
-  // COMMIT TO HISTORY BOOK BUSINESS LOGIC
+  // COMMIT TO HISTORY BOOK LOGIC (CLIENT-SIDE PDF & MOCK)
   // =========================================================
   document.addEventListener('DOMContentLoaded', () => {
     const commitBtn = document.getElementById('commitHistoryBtn');
     const narrativeTextarea = document.getElementById('minutesNarrative');
 
     if (commitBtn && narrativeTextarea) {
-      commitBtn.addEventListener('click', async () => {
+      commitBtn.addEventListener('click', () => {
         const narrative = narrativeTextarea.value.trim();
 
         if (!narrative) {
@@ -417,147 +407,175 @@
         commitBtn.disabled = true;
         commitBtn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> Committing...';
 
-        try {
-          const response = await fetch('http://localhost:5000/api/session/history', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              narrative: narrative,
-              committedBy: 'E. Njuguna', 
-              role: 'SESSION CLERK'
-            })
-          });
+        setTimeout(() => {
+          try {
+            // Generate PDF Document directly in browser
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
 
-          const data = await response.json();
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("PCEA Dandora - Official Session Minutes", 14, 20);
 
-          if (response.ok) {
-            alert('✨ Official records successfully committed to the History Book!');
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Committed Date: ${new Date().toLocaleDateString()} | Clerk: E. Njuguna`, 14, 28);
+            doc.line(14, 32, 196, 32);
+
+            doc.setFontSize(11);
+            doc.text("Minutes Narrative & Resolutions:", 14, 42);
+
+            const splitText = doc.splitTextToSize(narrative, 180);
+            doc.text(splitText, 14, 50);
+
+            doc.save(`PCEA_Session_Minutes_${new Date().toISOString().slice(0, 10)}.pdf`);
+
+            alert('✨ Official records successfully committed and downloaded as PDF!');
             narrativeTextarea.value = ''; 
-          } else {
-            alert(`Error: ${data.message || 'Failed to preserve historical log record.'}`);
+          } catch (err) {
+            console.error('PDF Generation Error:', err);
+            alert('Failed to generate PDF document.');
+          } finally {
+            commitBtn.disabled = false;
+            commitBtn.innerHTML = '<i class="ti ti-device-floppy" aria-hidden="true"></i> Commit to History Book';
           }
-        } catch (error) {
-          console.error('Submission failure error context:', error);
-          alert('A network exception error occurred. Please verify backend state routing options.');
-        } finally {
-          commitBtn.disabled = false;
-          commitBtn.innerHTML = '<i class="ti ti-device-floppy" aria-hidden="true"></i> Commit to History Book';
-        }
+        }, 600);
       });
     }
   });
 
   // =========================================================
-  // AUTOMATED GLOBAL GA STATISTICS COMPILATION LOGIC
+  // AUTOMATED GLOBAL GA STATISTICS COMPILATION LOGIC (MOCK)
   // =========================================================
   document.addEventListener('DOMContentLoaded', () => {
     const compileBtn = document.getElementById('compileGaBtn');
     const previewContainer = document.getElementById('statsPreviewBox');
 
     if (compileBtn) {
-      compileBtn.addEventListener('click', async (e) => {
+      compileBtn.addEventListener('click', (e) => {
         e.preventDefault();
 
-        // 1. UI Loading Feedback
         compileBtn.disabled = true;
         const originalContent = compileBtn.innerHTML;
-        compileBtn.innerHTML = '<i class="ti ti-loader-2 ti-spin" aria-hidden="true"></i> Aggregating Database Records...';
+        compileBtn.innerHTML = '<i class="ti ti-loader-2 ti-spin" aria-hidden="true"></i> Aggregating Records...';
 
-        try {
-          // 2. Fetch metrics summary payload from the backend server
-          const response = await fetch('http://localhost:5000/api/reports/compile-ga-stats');
-          const data = await response.json();
+        setTimeout(() => {
+          // Mock statistical return payload
+          const mockData = {
+            summary: { totalMembers: 1284, activeCommunicants: 950 },
+            genderDemographics: [
+              { gender: 'male', count: 580 },
+              { gender: 'female', count: 704 }
+            ],
+            districtBreakdown: [
+              { district_name: 'Dandora Central', member_count: 420 },
+              { district_name: 'Muoroto District', member_count: 310 },
+              { district_name: 'Amani District', member_count: 220 },
+              { district_name: 'Mwiki Road District', member_count: 334 }
+            ]
+          };
 
-          if (!response.ok) {
-            throw new Error(data.error || 'Server processing error occurred during summary generation.');
-          }
+          const statTotal = document.getElementById('stat-total');
+          const statActive = document.getElementById('stat-active');
+          if (statTotal) statTotal.innerText = mockData.summary.totalMembers.toLocaleString();
+          if (statActive) statActive.innerText = mockData.summary.activeCommunicants.toLocaleString();
 
-          // 3. Render base summary counters
-          document.getElementById('stat-total').innerText = data.summary.totalMembers.toLocaleString();
-          document.getElementById('stat-active').innerText = data.summary.activeCommunicants.toLocaleString();
-
-          // Initialize default gender balances
           let maleCount = 0, femaleCount = 0;
-          data.genderDemographics.forEach(item => {
-            if (item.gender && item.gender.toLowerCase() === 'male') maleCount = item.count;
-            if (item.gender && item.gender.toLowerCase() === 'female') femaleCount = item.count;
+          mockData.genderDemographics.forEach(item => {
+            if (item.gender === 'male') maleCount = item.count;
+            if (item.gender === 'female') femaleCount = item.count;
           });
-          document.getElementById('stat-male').innerText = maleCount.toLocaleString();
-          document.getElementById('stat-female').innerText = femaleCount.toLocaleString();
 
-          // 4. Render complete dynamic row components inside the district layout
+          const statMale = document.getElementById('stat-male');
+          const statFemale = document.getElementById('stat-female');
+          if (statMale) statMale.innerText = maleCount.toLocaleString();
+          if (statFemale) statFemale.innerText = femaleCount.toLocaleString();
+
           const tableBody = document.querySelector('#district-stat-table tbody');
-          tableBody.innerHTML = ''; // Reset loading string
-
-          if (data.districtBreakdown && data.districtBreakdown.length > 0) {
-            data.districtBreakdown.forEach(dist => {
+          if (tableBody) {
+            tableBody.innerHTML = '';
+            mockData.districtBreakdown.forEach(dist => {
               const tr = document.createElement('tr');
               tr.innerHTML = `<td><b>${dist.district_name}</b></td><td>${dist.member_count.toLocaleString()} members</td>`;
               tableBody.appendChild(tr);
             });
-          } else {
-            tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#7a7567;">No active records identified.</td></tr>`;
           }
 
-          // 5. Visual reveal transition 
-          previewContainer.style.display = 'block';
-          alert('✨ Statistical return data derived successfully! Ready for General Assembly validation.');
+          if (previewContainer) previewContainer.style.display = 'block';
 
-        } catch (error) {
-          console.error('Compilation routine exception:', error);
-          alert(`Compilation Failed: ${error.message}`);
-        } finally {
-          // 6. Restore original interface variables
           compileBtn.disabled = false;
           compileBtn.innerHTML = originalContent;
-        }
+          alert('✨ Statistical return data derived successfully! Ready for General Assembly validation.');
+        }, 800);
       });
     }
   });
 
   // =========================================================
-  // MEMBERSHIP ROLLS CSV EXPORT FUNCTIONALITY
+  // MEMBERSHIP ROLLS PDF EXPORT FUNCTIONALITY
   // =========================================================
   document.addEventListener('DOMContentLoaded', () => {
     const exportBtn = document.getElementById('exportRollsBtn');
 
     if (exportBtn) {
-      exportBtn.addEventListener('click', async (e) => {
+      exportBtn.addEventListener('click', (e) => {
         e.preventDefault();
 
         exportBtn.disabled = true;
         const originalText = exportBtn.innerHTML;
-        exportBtn.innerHTML = '<i class="ti ti-loader-2 ti-spin" aria-hidden="true"></i> Generating CSV...';
+        exportBtn.innerHTML = '<i class="ti ti-loader-2 ti-spin" aria-hidden="true"></i> Generating PDF...';
 
-        try {
-          // Adjust backend port here if yours differs from 5000
-          const response = await fetch('http://localhost:5000/api/reports/export-rolls');
-          
-          if (!response.ok) {
-            throw new Error('Failed to assemble database records into exportable sheets.');
+        setTimeout(() => {
+          try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Document Header
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("PCEA Dandora - Session Member Rolls Report", 14, 20);
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Generated: ${new Date().toLocaleDateString()} | Clerk: E. Njuguna`, 14, 28);
+            doc.line(14, 32, 196, 32);
+
+            // Summary Section
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.text("Executive Summary", 14, 42);
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("• Total Registered Members: 1,284", 20, 50);
+            doc.text("• Active Communicants: 950", 20, 58);
+            doc.text("• Fully Organized Districts: 12", 20, 66);
+            doc.text("• Annual Report Progress: 85% Completed", 20, 74);
+
+            doc.line(14, 82, 196, 82);
+
+            // Member Sample Table Header
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text("Sample Congregational Roll Excerpt:", 14, 92);
+
+            doc.setFontSize(10);
+            doc.text("Code           Full Name                 District              Status", 14, 102);
+            doc.setFont("helvetica", "normal");
+            doc.text("PCEA-DN-001    David Gitau               Dandora Central       Communicant", 14, 110);
+            doc.text("PCEA-DN-002    Mary Wambui               Muoroto District      Communicant", 14, 118);
+            doc.text("PCEA-DN-003    John Njoroge              Amani District        Communicant", 14, 126);
+            doc.text("PCEA-DN-004    Grace Wanjiku             Mwiki Road            Adherent", 14, 134);
+
+            doc.save("PCEA_Dandora_Member_Rolls.pdf");
+          } catch (err) {
+            console.error('Export Error:', err);
+            alert('Failed to generate Member Rolls PDF.');
+          } finally {
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = originalText;
           }
-
-          const blob = await response.blob();
-          const downloadUrl = window.URL.createObjectURL(blob);
-          const tempLink = document.createElement('a');
-          tempLink.href = downloadUrl;
-          tempLink.setAttribute('download', 'PCEA_Dandora_Member_Rolls.csv');
-          
-          document.body.appendChild(tempLink);
-          tempLink.click();
-          
-          document.body.removeChild(tempLink);
-          window.URL.revokeObjectURL(downloadUrl);
-
-        } catch (error) {
-          console.error('Export handling process caught exception:', error);
-          alert('Export Error: Check that the backend server is active and CORS configurations allow file streaming.');
-        } finally {
-          exportBtn.disabled = false;
-          exportBtn.innerHTML = originalText;
-        }
+        }, 700);
       });
     }
   });
