@@ -66,20 +66,16 @@ app.get('/', (req, res) => {
     });
 });
 
-// Example: Directing to specific dashboard based on role query ?role=admin
 app.get('/dashboard', (req, res) => {
-    const role = req.query.role; // e.g., /dashboard?role=admin
-    
-    const rolePages = {
-        admin: 'admin.html',
-        elder: 'elder.html',
-        minister: 'minister.html',
-        sessionclerk: 'sessionclerk.html',
-        treasurer: 'treasurer.html'
-    };
-
-    const targetFile = rolePages[role] || 'index.html';
-    res.sendFile(path.join(__dirname, '../frontend', targetFile));
+    // Point to index.html or another existing page in frontend/
+    res.sendFile(path.join(__dirname, '../frontend/index.html'), (err) => {
+        if (err) {
+            res.status(500).send({
+                message: "Error loading dashboard page",
+                error: err.message
+            });
+        }
+    });
 });
 
 // ==========================================
