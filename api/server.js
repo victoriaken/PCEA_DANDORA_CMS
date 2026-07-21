@@ -27,12 +27,18 @@ app.use('/frontend', express.static(path.join(__dirname, '../frontend')));
 // ==========================================
 
 // Mock Auth Routes
-app.post('/api/auth/index', (req, res) => {
-    return res.status(200).json({
-        success: true,
-        token: 'mock-jwt-token-12345',
-        user: { name: 'Admin User', role: 'Session Clerk' }
-    });
+// Inside api/server.js
+app.post('/api/login', (req, res) => {
+    const { desk, password } = req.body;
+    
+    // Express checks database / passkeys here...
+    if (isValid) {
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ 
+            message: "Invalid password configuration for selected desk." 
+        });
+    }
 });
 
 // Mock Session & Reports Routes

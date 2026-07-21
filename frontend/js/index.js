@@ -2,7 +2,7 @@
 
 // Dynamic API Base URL configuration
 const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
-  ? 'http://localhost:5000'  // Your local Node.js backend port
+  ? 'http://localhost:5500'  // Your local Node.js backend port
   : 'https://your-backend-service.onrender.com'; // Replace with your production URL later
 
 document.addEventListener('DOMContentLoaded', () => {
